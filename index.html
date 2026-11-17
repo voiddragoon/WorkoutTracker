@@ -84,6 +84,8 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke
 .prtag:empty{display:none}
 /* rest bar */
 #restbar{position:fixed;left:10px;right:10px;bottom:calc(64px + env(safe-area-inset-bottom));max-width:700px;margin:0 auto;background:var(--raised);border:1px solid var(--line);border-radius:14px;overflow:hidden;z-index:7;box-shadow:0 8px 30px rgba(0,0,0,.4)}
+#restbar{z-index:16}
+body.focusing #restbar{bottom:calc(14px + env(safe-area-inset-bottom))}
 #restbar{transform:translateY(calc(100% + 100px));opacity:0;pointer-events:none;transition:transform .55s var(--spring),opacity .35s var(--ease)}
 #restbar.show{transform:none;opacity:1;pointer-events:auto}
 #restbar .fill{position:absolute;inset:0;background:rgba(var(--acc-rgb),.18);transform:scaleX(0);transform-origin:left;transition:transform .25s linear,background-color .4s}
@@ -195,6 +197,7 @@ nav#tabs svg{transition:transform .25s var(--spring)}
 .rrep:focus{border-color:var(--acc)}
 .chips.scroll{flex-wrap:nowrap;overflow-x:auto;margin:10px -2px 0;padding:0 2px 4px;scrollbar-width:none}.chips.scroll::-webkit-scrollbar{display:none}.chips.scroll .chip{flex:none}
 .rname{font-weight:600;font-size:14px}
+.enote{font-size:12px;color:var(--acc);margin-top:3px;font-weight:600;line-height:1.35}
 .stepper{display:flex;align-items:center;gap:2px;background:var(--card2);border-radius:10px;padding:2px}
 .stepper button{width:32px;height:32px;border:0;background:none;font-size:18px;font-weight:700;cursor:pointer;border-radius:8px;transition:transform .15s var(--ease)}
 .stepper button:active{transform:scale(.85)}
@@ -203,6 +206,42 @@ nav#tabs svg{transition:transform .25s var(--spring)}
 .icon:disabled{opacity:.25}
 .fl .row{gap:8px;margin-top:6px}.fl .row input{flex:1;min-width:0;margin-top:0}.fl .row .mut{flex:none}
 pre.sql{background:var(--card2);border-radius:10px;padding:12px;font-size:11px;overflow:auto;white-space:pre;max-height:40vh}
+/* focus view: one exercise per full-screen page */
+#focus{position:fixed;inset:0;z-index:15;background:var(--bg);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top)}
+#focus[hidden]{display:none}
+.fhead{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:8px 12px;border-bottom:1px solid var(--line)}
+.fhead .link:last-child{justify-self:end}
+.ftitle{text-align:center;display:flex;flex-direction:column;line-height:1.25}.ftitle b{font-size:15px}
+.ftitle span{font-size:12px;color:var(--acc);font-weight:700;font-variant-numeric:tabular-nums}
+.fdots{display:flex;justify-content:center;gap:6px;padding:10px 0 2px;flex-wrap:wrap}
+.fdot{width:8px;height:8px;border-radius:4px;background:var(--line);border:0;padding:0;cursor:pointer;transition:width .35s var(--spring),background-color .3s var(--ease)}
+.fdot.done{background:rgba(61,220,132,.55)}.fdot.on{width:24px;background:var(--acc)}
+.ftrack{flex:1;min-height:0;display:flex;will-change:transform}
+.fpage{flex:none;width:100vw;height:100%;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;padding:6px 16px calc(120px + env(safe-area-inset-bottom))}
+.fin{max-width:560px;margin:0 auto}
+.ftop{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-top:8px}
+.fname{font-size:28px;font-weight:800;line-height:1.12;letter-spacing:-.4px;margin:0}
+.fsub{color:var(--mut);font-size:13px;margin-top:6px}
+.flast{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:14px 0 12px}
+.flast .k{font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--mut);font-weight:700}
+.flast .v{font-size:17px;font-weight:700;margin-top:5px;font-variant-numeric:tabular-nums;line-height:1.4}
+.fopts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:0 0 6px}
+.fopt{padding:13px 2px;border-radius:12px;border:1px solid var(--line);background:var(--card2);font-weight:700;font-size:13.5px;cursor:pointer;line-height:1.15;transition:transform .18s var(--ease),background-color .25s var(--ease),color .25s,border-color .25s}
+.fopt:active{transform:scale(.95)}.fopt.on{background:var(--acc);color:var(--on-acc);border-color:var(--acc)}
+.fsug{background:none;border:0;color:var(--mut);font-size:12px;padding:6px 0 10px;cursor:pointer}.fsug b{color:var(--acc)}
+.fset{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px 12px;margin-bottom:8px;transition:background-color .35s var(--ease),border-color .35s var(--ease)}
+.fset.done{background:rgba(61,220,132,.10);border-color:rgba(61,220,132,.35)}.fset.warm .fsn{color:var(--gold)}
+.fset-top{display:flex;align-items:center;gap:8px;margin-bottom:8px}.fsn{font-weight:800;background:none;border:0;padding:0;font-size:15px;cursor:pointer}
+.fset-ctl{display:flex;align-items:center;gap:8px}
+.fstep{display:grid;grid-template-columns:36px 1fr 36px;align-items:center;background:var(--card2);border-radius:12px;flex:1;min-width:0;position:relative;padding:2px 2px 12px}
+.fstep button{height:42px;border:0;background:none;font-size:22px;font-weight:700;cursor:pointer;border-radius:10px;transition:transform .15s var(--ease)}
+.fstep button:active{transform:scale(.82)}
+.fstep input{width:100%;min-width:0;background:transparent;border:0;text-align:center;font-size:22px;font-weight:800;color:var(--txt);outline:none;padding:0;-moz-appearance:textfield}
+.fstep input::-webkit-outer-spin-button,.fstep input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.fstep small{position:absolute;bottom:3px;left:0;right:0;text-align:center;font-size:9px;color:var(--mut);text-transform:uppercase;letter-spacing:.6px;pointer-events:none}
+.fchk{width:54px;height:56px;border-radius:12px;border:0;background:var(--card2);font-size:22px;font-weight:800;color:var(--mut);flex:none;cursor:pointer;transition:transform .18s var(--ease),background-color .25s}
+.fchk:active{transform:scale(.92)}.fset.done .fchk{background:var(--ok);color:#06210f}
+.fsum .li{border:1px solid var(--line);border-radius:12px;margin-bottom:6px;background:var(--card)}
 @keyframes draw{to{stroke-dashoffset:0}}
 @keyframes fade{to{opacity:1}}
 @keyframes pop{from{transform:scale(0);opacity:0}70%{transform:scale(1.25);opacity:1}to{transform:scale(1);opacity:1}}
@@ -228,6 +267,7 @@ pre.sql{background:var(--card2);border-radius:10px;padding:12px;font-size:11px;o
   <button data-a="tab" data-tab="progress"><svg class="i" viewBox="0 0 24 24"><path d="M4 19h16M6 15l4-5 3 3 5-7"/></svg>Progress</button>
   <button data-a="tab" data-tab="exercises"><svg class="i" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01"/></svg>Exercises</button>
 </nav>
+<div id="focus" hidden></div>
 <div id="modal" hidden><div class="sheet" id="sheet"></div></div>
 <div id="toast"></div>
 
@@ -262,7 +302,7 @@ const r1 = x => Math.round(x * 10) / 10;
 
 /* ============ state ============ */
 function fresh(){
-  return { v:1, settings:{unit:'lb', formula:'epley', rest:120, theme:'glacier', repMin:8, repMax:12, inc:null, seedPurged:true}, exercises: [], workouts: [], routines: [], deleted: {}, active: null };
+  return { v:1, settings:{unit:'lb', formula:'epley', rest:120, theme:'glacier', repMin:8, repMax:12, inc:null, focus:true, seedPurged:true}, exercises: [], workouts: [], routines: [], deleted: {}, active: null };
 }
 function normalize(d){
   const f = fresh(), purged = !!(d.settings && d.settings.seedPurged);
@@ -371,6 +411,15 @@ function lastUsed(){
   const m = {};
   for (const w of S.workouts) for (const en of w.entries) if (!m[en.exId] || w.start > m[en.exId]) m[en.exId] = w.start;
   return m;
+}
+function lastSession(exId, excludeId){
+  let best = null;
+  for (const w of S.workouts){
+    if (w.id === excludeId || (best && w.start <= best.start)) continue;
+    const en = w.entries.find(e => e.exId === exId);
+    if (en && en.sets.some(s => s.r > 0)) best = {start:w.start, sets:en.sets.filter(s => s.r > 0)};
+  }
+  return best;
 }
 function lastSets(exId, excludeId){
   let best = null;
@@ -617,7 +666,8 @@ view.addEventListener('pointercancel', endSwipe);
 // a swipe that ends on a button must not also "tap" it
 view.addEventListener('click', e => { if (view.classList.contains('swiping')) { e.stopPropagation(); e.preventDefault(); } }, true);
 
-function render(){
+function render(){ renderMain(); renderFocus(); }
+function renderMain(){
   const switching = shownTab !== tab, from = shownTab;
   const first = switching ? null : snap(view);
   document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
@@ -645,7 +695,7 @@ function renderLog(){
       <input type="datetime-local" data-f="start" value="${toLocalInput(a.start)}" aria-label="Start time">
       ${a.editingId ? '<span class="badge">editing</span>' : ''}</div>
     ${a.manual ? `<div class="meta dur">Duration <input type="number" inputmode="numeric" data-f="dur" value="${a.dur || 60}"> min</div>` : ''}
-    <div class="row gap"><button class="btn ghost" data-a="cancel">Discard</button><button class="btn primary" data-a="finish">Finish</button></div>
+    <div class="row gap"><button class="btn ghost" data-a="cancel">Discard</button><button class="btn" data-a="focusOn">Focus view</button><button class="btn primary" data-a="finish">Finish</button></div>
   </section>`;
   a.entries.forEach((en, ei) => { h += entryCard(en, ei); });
   h += `<button class="btn wide add" data-a="pick" data-k="addex">+ Add exercise</button>`;
@@ -698,7 +748,7 @@ function entryCard(en, ei){
   return `<section class="card entry ${isR ? 'reps' : ''}" data-k="${en.id}">
     <div class="ehead"><button class="ename" data-a="goprog" data-id="${en.exId}">${esc(x.name)}</button>
       <button class="icon" data-a="exmenu" data-e="${ei}" aria-label="Exercise options">⋯</button></div>
-    <div class="mut xs">${best}</div>${sgLine}
+    <div class="mut xs">${best}</div>${en.note ? `<div class="enote">${esc(en.note)}</div>` : ''}${sgLine}
     <div class="sethead"><span>Set</span><span>Previous</span><span>${isR ? '+' : ''}${unit()}</span><span>Reps</span><span></span></div>
     ${rows}
     <button class="btn ghost wide sm" style="margin-top:8px" data-a="addset" data-e="${ei}">+ Add set</button>
@@ -950,7 +1000,7 @@ function renderRItems(animate){
   const box = $('#ritems'); if (!box) return;
   const first = animate ? snap(box) : null, n = rDraft.items.length;
   box.innerHTML = n ? rDraft.items.map((it, i) => { const x = ex(it.exId), [dlo, dhi] = x ? repRange(x) : [8, 12];
-    return `<div class="ritem" data-k="ri${it.k}"><div class="rhead"><div class="rname">${esc(x ? x.name : '(deleted exercise)')}</div>
+    return `<div class="ritem" data-k="ri${it.k}"><div class="rhead"><div class="rname">${esc(x ? x.name : '(deleted exercise)')}${it.note ? `<div class="enote">${esc(it.note)}</div>` : ''}</div>
       <div class="rbtns"><button class="icon" data-a="rmove" data-i="${i}" data-d="-1" ${i ? '' : 'disabled'} aria-label="Move up">↑</button><button class="icon" data-a="rmove" data-i="${i}" data-d="1" ${i < n - 1 ? '' : 'disabled'} aria-label="Move down">↓</button><button class="icon" data-a="rdel" data-i="${i}" aria-label="Remove">×</button></div></div>
       <div class="rctl"><div class="stepper"><button data-a="rsets" data-i="${i}" data-d="-1" aria-label="Fewer sets">−</button><span>${it.sets} set${it.sets > 1 ? 's' : ''}</span><button data-a="rsets" data-i="${i}" data-d="1" aria-label="More sets">+</button></div>
       <span class="mut">×</span><input class="rrep" type="number" inputmode="numeric" min="1" data-f="rlo" data-i="${i}" value="${it.lo || ''}" placeholder="${dlo}" aria-label="Minimum reps"><span class="mut">–</span><input class="rrep" type="number" inputmode="numeric" min="1" data-f="rhi" data-i="${i}" value="${it.hi || ''}" placeholder="${dhi}" aria-label="Maximum reps"><span class="mut xs">reps</span></div></div>`; }).join('')
@@ -998,6 +1048,7 @@ function openSettings(){
   const s = S.settings;
   modal(`<h2>Settings</h2>
     <div class="fl">Units<div class="seg"><button class="${s.unit === 'lb' ? 'on' : ''}" data-a="unit" data-u="lb">lb</button><button class="${s.unit === 'kg' ? 'on' : ''}" data-a="unit" data-u="kg">kg</button></div></div>
+    <div class="fl">Workout view<div class="seg"><button class="${s.focus !== false ? 'on' : ''}" data-a="setFocus" data-v="1">Full-screen</button><button class="${s.focus === false ? 'on' : ''}" data-a="setFocus" data-v="0">List</button></div></div>
     <div class="fl">Theme<div class="swatches">${THEMES.map(t => `<button class="sw ${t.id === s.theme ? 'on' : ''}" data-a="theme" data-t="${t.id}" style="--s1:${t.bg};--s2:${t.acc}"><span></span>${t.name}</button>`).join('')}</div></div>
     <label class="fl">Estimated 1RM formula<select data-f="formula"><option value="epley" ${s.formula === 'epley' ? 'selected' : ''}>Epley — weight × (1 + reps/30)</option><option value="brzycki" ${s.formula === 'brzycki' ? 'selected' : ''}>Brzycki — weight × 36/(37 − reps)</option></select></label>
     <div class="fl">Default target rep range<div class="row"><input data-f="defLo" type="number" inputmode="numeric" min="1" value="${s.repMin}"><span class="mut">to</span><input data-f="defHi" type="number" inputmode="numeric" min="1" value="${s.repMax}"></div></div>
@@ -1068,6 +1119,7 @@ function alertDone(){
 }
 setInterval(() => {
   const el = $('#elapsed'); if (el && S.active && !S.active.manual) el.textContent = fmtClock(Date.now() - S.active.start);
+  const fe = $('#felapsed'); if (fe && S.active && !S.active.manual) fe.textContent = fmtClock(Date.now() - S.active.start);
   const bar = $('#restbar');
   if (restEnd){
     const ms = restEnd - Date.now();
@@ -1230,6 +1282,119 @@ function syncSection(){
     <div class="stack"><button class="btn" data-a="sbSync">Sync now</button><button class="btn ghost" data-a="sbOut">Sign out</button></div>`;
 }
 
+/* ============ focus view ============
+   During a workout, each exercise gets its own full-screen page: what you did last time, quick
+   weight choices (−inc / same / +inc / custom), big steppers per set, and a check button.
+   Swipe sideways between exercises; finishing every set slides to the next one. */
+let fIdx = 0;
+const focusOpen = () => !!(S.active && S.active.view === 'focus');
+const startView = () => S.settings.focus === false ? 'list' : 'focus';
+function firstOpenEntry(){ const i = S.active ? S.active.entries.findIndex(en => en.sets.some(st => !st.warm && !st.done)) : -1; return i < 0 ? 0 : i; }
+function entryDone(en){ const w = en.sets.filter(st => !st.warm); return w.length > 0 && w.every(st => st.done); }
+function positionTrack(animate){
+  const tr = $('#focus .ftrack'); if (!tr) return;
+  tr.style.transition = animate && !reduce.matches ? `transform .42s ${SWIPE_EASE}` : 'none';
+  tr.style.transform = `translateX(${-fIdx * innerWidth}px)`;
+}
+function updateFocusChrome(){
+  const n = S.active ? S.active.entries.length : 0;
+  document.querySelectorAll('#focus .fdot').forEach((d, i) => d.classList.toggle('on', i === fIdx));
+  const c = $('#fcount'); if (c) c.textContent = fIdx < n ? `${fIdx + 1} of ${n}` : 'Done';
+}
+function goFocus(i){
+  const n = S.active ? S.active.entries.length : 0;
+  fIdx = Math.max(0, Math.min(n, i)); positionTrack(true); updateFocusChrome();
+}
+function focusPage(en, ei){
+  const x = ex(en.exId) || {name:'(deleted exercise)', type:'weighted'}, isR = x.type === 'reps';
+  const ls = lastSession(en.exId, S.active.editingId), last = ls ? ls.sets.filter(s => !s.warm) : [];
+  const repMode = isR && !last.some(s => s.w > 0), inc = incDisp(x);
+  const sg = suggestion(en.exId, S.active.editingId, en.lo, en.hi);
+  const opts = last.length ? [['minus', repMode ? '−1<br>rep' : `−${inc}<br>${unit()}`], ['same', 'Same as<br>last'], ['plus', repMode ? '+1<br>rep' : `+${inc}<br>${unit()}`], ['custom', 'Custom']] : [['custom', 'Custom']];
+  let wi = 0, n = 0;
+  const rows = en.sets.map((st, si) => {
+    const p = st.warm ? null : last.length ? last[Math.min(wi++, last.length - 1)] : null, lbl = st.warm ? 'Warm-up' : `Set ${++n}`;
+    const wPh = p ? (p.w > 0 ? fmtW(p.w) : isR ? '+0' : unit()) : sg && !sg.first && sg.w != null ? fmtW(sg.w) : isR ? '+0' : unit();
+    const rPh = p ? p.r : sg ? sg.r : '';
+    return `<div class="fset ${st.done ? 'done' : ''} ${st.warm ? 'warm' : ''}" data-k="f${st.id}">
+      <div class="fset-top"><button class="fsn" data-a="setmenu" data-e="${ei}" data-s="${si}">${lbl}</button><span class="mut xs">${p ? `Last ${setTxt(p, isR)}` : ''}</span>${livePR(en, st) ? '<span class="badge gold">PR</span>' : ''}</div>
+      <div class="fset-ctl">
+        <div class="fstep"><button data-a="fstep" data-e="${ei}" data-s="${si}" data-x="w" data-d="-1" aria-label="Less weight">−</button><input type="number" inputmode="decimal" step="any" min="0" data-f="w" data-e="${ei}" data-s="${si}" value="${st.w != null ? fmtW(st.w) : ''}" placeholder="${wPh}"><button data-a="fstep" data-e="${ei}" data-s="${si}" data-x="w" data-d="1" aria-label="More weight">+</button><small>${isR ? 'added ' : ''}${unit()}</small></div>
+        <div class="fstep"><button data-a="fstep" data-e="${ei}" data-s="${si}" data-x="r" data-d="-1" aria-label="Fewer reps">−</button><input type="number" inputmode="numeric" step="1" min="0" data-f="r" data-e="${ei}" data-s="${si}" value="${st.r ?? ''}" placeholder="${rPh}"><button data-a="fstep" data-e="${ei}" data-s="${si}" data-x="r" data-d="1" aria-label="More reps">+</button><small>reps</small></div>
+        <button class="fchk" data-a="fdone" data-e="${ei}" data-s="${si}" aria-label="Complete set">✓</button>
+      </div></div>`;
+  }).join('');
+  const sgTxt = sg && !sg.first ? (sg.w != null ? `${isR ? '+' : ''}${fmtW(sg.w)} × ${sg.r}` : `${sg.r} reps`) : '';
+  return `<div class="fpage" data-i="${ei}"><div class="fin">
+    <div class="ftop"><h1 class="fname">${esc(x.name)}</h1><button class="icon" data-a="exmenu" data-e="${ei}" aria-label="Exercise options">⋯</button></div>
+    ${en.note ? `<div class="enote">${esc(en.note)}</div>` : ''}
+    <div class="fsub">${sg ? `Target ${sg.lo}–${sg.hi} reps · ` : ''}${en.sets.filter(s => !s.warm).length} sets</div>
+    <div class="flast"><div class="k">Last time${ls ? ` · ${fmtDate(ls.start)}` : ''}</div><div class="v">${last.length ? last.map(s => setTxt(s, isR)).join(' · ') : 'First time. Pick a starting weight.'}</div></div>
+    <div class="fopts" style="${last.length ? '' : 'grid-template-columns:1fr'}">${opts.map(([m, l]) => `<button class="fopt ${en.plan === m ? 'on' : ''}" data-a="fplan" data-e="${ei}" data-m="${m}">${l}</button>`).join('')}</div>
+    ${sgTxt ? `<button class="fsug" data-a="fillsug" data-e="${ei}">Progression suggests <b>${sg.up ? '↑ ' : ''}${sgTxt}</b> · tap to use</button>` : ''}
+    ${rows}
+    <button class="btn ghost wide sm" style="margin-top:4px" data-a="addset" data-e="${ei}">+ Add set</button>
+  </div></div>`;
+}
+function focusSummary(){
+  const a = S.active, n = a.entries.length;
+  const items = a.entries.map((en, i) => { const x = ex(en.exId), w = en.sets.filter(s => !s.warm), d = w.filter(s => s.done).length;
+    return `<button class="li" data-a="fgo" data-i="${i}"><span>${esc(x ? x.name : '(deleted)')}</span><span class="${d === w.length && w.length ? 'up' : 'mut'} sm">${d}/${w.length} sets</span></button>`; }).join('');
+  return `<div class="fpage fsum" data-i="${n}"><div class="fin">
+    <h1 class="fname" style="margin-top:8px">${n ? 'Wrap up' : 'Add your first exercise'}</h1>
+    <div class="fsub">${n ? 'Tap an exercise to jump back to it.' : 'Pick a move from the Tonal library to start.'}</div>
+    <div style="margin:14px 0">${items}</div>
+    <button class="btn wide add" data-a="pick">+ Add exercise</button>
+    ${n ? '<div class="stack"><button class="btn primary" data-a="finish">Finish workout</button><button class="btn ghost danger" data-a="cancel">Discard workout</button></div>' : ''}
+  </div></div>`;
+}
+function renderFocus(){
+  const box = $('#focus');
+  if (!focusOpen()){ if (!box.hidden){ box.hidden = true; box.innerHTML = ''; document.body.classList.remove('focusing'); } return; }
+  const a = S.active, n = a.entries.length;
+  fIdx = Math.max(0, Math.min(fIdx, n));
+  const cur = box.querySelector(`.fpage[data-i="${fIdx}"]`), top = cur ? cur.scrollTop : 0, opening = box.hidden;
+  box.innerHTML = `<div class="fhead"><button class="link" data-a="focusList">☰ List</button>
+      <div class="ftitle"><b>${esc(a.name)}</b><span><span id="felapsed">${a.manual ? 'Backdated' : fmtClock(Date.now() - a.start)}</span> · <span id="fcount"></span></span></div>
+      <button class="link" data-a="finish">Finish</button></div>
+    <div class="fdots">${a.entries.map((en, i) => `<button class="fdot ${entryDone(en) ? 'done' : ''}" data-a="fgo" data-i="${i}" aria-label="Exercise ${i + 1}"></button>`).join('')}<button class="fdot" data-a="fgo" data-i="${n}" aria-label="Wrap up"></button></div>
+    <div class="ftrack">${a.entries.map(focusPage).join('')}${focusSummary()}</div>`;
+  box.hidden = false; document.body.classList.add('focusing');
+  positionTrack(false); updateFocusChrome();
+  const c2 = box.querySelector(`.fpage[data-i="${fIdx}"]`); if (c2) c2.scrollTop = top;
+  if (opening && !reduce.matches) box.animate([{opacity:0, transform:'translateY(24px)'}, {opacity:1, transform:'none'}], {duration:380, easing:EASE});
+}
+(() => {
+  const box = $('#focus'); let d = null, justSwiped = 0;
+  box.addEventListener('pointerdown', e => {
+    if (!e.target.closest('.ftrack') || e.target.closest('input') || e.pointerType === 'mouse') return;
+    d = {x0:e.clientX, y0:e.clientY, x:e.clientX, t:performance.now(), v:0, locked:false, id:e.pointerId};
+  });
+  box.addEventListener('pointermove', e => {
+    if (!d || e.pointerId !== d.id) return;
+    const dx = e.clientX - d.x0, dy = e.clientY - d.y0, now = performance.now();
+    d.v = (e.clientX - d.x) / Math.max(1, now - d.t); d.x = e.clientX; d.t = now;
+    if (!d.locked){
+      if (Math.abs(dy) > 10 && Math.abs(dy) > Math.abs(dx)){ d = null; return; }
+      if (Math.abs(dx) < 10 || Math.abs(dx) < Math.abs(dy) * 1.2) return;
+      d.locked = true; try { box.setPointerCapture(e.pointerId); } catch (err) {}
+    }
+    const n = S.active ? S.active.entries.length : 0, off = (fIdx === 0 && dx > 0) || (fIdx === n && dx < 0) ? dx * .25 : dx;
+    const tr = box.querySelector('.ftrack'); tr.style.transition = 'none'; tr.style.transform = `translateX(${-fIdx * innerWidth + off}px)`;
+    e.preventDefault();
+  });
+  const end = e => {
+    if (!d || (e && e.pointerId !== d.id)) return;
+    const s0 = d; d = null; if (!s0.locked) return;
+    justSwiped = performance.now();
+    const dx = s0.x - s0.x0, flick = Math.abs(s0.v) > .45 && Math.sign(s0.v) === Math.sign(dx);
+    goFocus(Math.abs(dx) > innerWidth * .22 || flick ? fIdx + (dx < 0 ? 1 : -1) : fIdx);
+  };
+  box.addEventListener('pointerup', end); box.addEventListener('pointercancel', end);
+  box.addEventListener('click', e => { if (performance.now() - justSwiped < 350){ e.stopPropagation(); e.preventDefault(); } }, true);
+  addEventListener('resize', () => positionTrack(false));
+})();
+
 /* ============ actions ============ */
 const act = () => S.active;
 const setAt = b => act().entries[+b.dataset.e].sets[+b.dataset.s];
@@ -1237,11 +1402,11 @@ const A = {
   tab: b => { if (b.dataset.tab === tab){ window.scrollTo({top:0, behavior:'smooth'}); return; } slideToTab(b.dataset.tab); },
   settings: () => openSettings(),
   close: () => closeModal(),
-  start: () => { S.active = newWorkout(); save(); render(); },
+  start: () => { S.active = newWorkout(); S.active.view = startView(); fIdx = 0; save(); render(); },
   repeat: b => {
     const w = S.workouts.find(x => x.id === b.dataset.id); if (!w) return;
     if (S.active){ toast('Finish or discard the current workout first'); return; }
-    S.active = newWorkout(w.name);
+    S.active = newWorkout(w.name); S.active.view = startView(); fIdx = 0;
     S.active.entries = w.entries.map(en => ({id:uid(), exId:en.exId, sets:en.sets.map(s => newSet({w:s.w, r:s.r, warm:!!s.warm}))}));
     save(); tab = 'log'; render(); window.scrollTo(0, 0);
   },
@@ -1253,7 +1418,8 @@ const A = {
     const id = x.id, prev = lastSets(id, act().editingId);
     const sets = prev.length ? prev.slice(0, 10).map(p => newSet({warm:!!p.warm})) : [newSet()];
     const en = {id:uid(), exId:id, sets};
-    act().entries.push(en); save(); closeModal(); render(); revealEntry(en.id);
+    act().entries.push(en); if (focusOpen()) fIdx = act().entries.length - 1;
+    save(); closeModal(); render(); if (!focusOpen()) revealEntry(en.id);
   },
   addset: b => { const en = act().entries[+b.dataset.e], l = en.sets[en.sets.length - 1];
     en.sets.push(newSet({w: l ? l.w : null, r: l ? l.r : null})); save(); render(); },
@@ -1279,7 +1445,7 @@ const A = {
   },
   newR: () => { rDraft = {id:null, name:'', items:[]}; openRoutineEditor(); },
   editR: b => { const r = S.routines.find(x => x.id === b.dataset.id); if (!r) return;
-    rDraft = {id:r.id, name:r.name, items:r.items.map(it => ({exId:it.exId, sets:it.sets, lo:it.lo, hi:it.hi, k:uid()}))}; openRoutineEditor(); },
+    rDraft = {id:r.id, name:r.name, items:r.items.map(it => ({exId:it.exId, sets:it.sets, lo:it.lo, hi:it.hi, note:it.note, k:uid()}))}; openRoutineEditor(); },
   saveAsR: b => { const w = S.workouts.find(x => x.id === b.dataset.id); if (!w) return;
     rDraft = {id:null, name:w.name, items:w.entries.filter(en => ex(en.exId)).map(en => ({exId:en.exId, sets:Math.max(1, en.sets.filter(s => !s.warm).length), k:uid()}))};
     openRoutineEditor(); },
@@ -1292,7 +1458,7 @@ const A = {
     const name = (rDraft.name || '').trim();
     if (!name){ toast('Give the workout a name'); $('#rName').focus(); return; }
     if (!rDraft.items.length){ toast('Add at least one exercise'); return; }
-    const items = rDraft.items.map(({exId, sets, lo, hi}) => { const o = {exId, sets}; if (lo || hi){ const a = lo || hi, z = hi || lo; o.lo = Math.min(a, z); o.hi = Math.max(a, z); } return o; });
+    const items = rDraft.items.map(({exId, sets, lo, hi, note}) => { const o = {exId, sets}; if (note) o.note = note; if (lo || hi){ const a = lo || hi, z = hi || lo; o.lo = Math.min(a, z); o.hi = Math.max(a, z); } return o; });
     const r = {id:rDraft.id || uid(), name, items}; touch(r);
     const i = S.routines.findIndex(x => x.id === r.id);
     if (i >= 0) S.routines[i] = r; else S.routines.push(r);
@@ -1305,9 +1471,60 @@ const A = {
     const r = S.routines.find(x => x.id === b.dataset.id); if (!r) return;
     const items = r.items.filter(it => ex(it.exId));
     if (!items.length){ toast('This workout has no exercises left'); return; }
-    S.active = newWorkout(r.name);
-    S.active.entries = items.map(it => Object.assign({id:uid(), exId:it.exId, sets:Array.from({length:it.sets}, () => newSet())}, it.lo ? {lo:it.lo, hi:it.hi} : {}));
+    S.active = newWorkout(r.name); S.active.view = startView(); fIdx = 0;
+    S.active.entries = items.map(it => Object.assign({id:uid(), exId:it.exId, sets:Array.from({length:it.sets}, () => newSet())}, it.lo ? {lo:it.lo, hi:it.hi} : {}, it.note ? {note:it.note} : {}));
     save(); render(); window.scrollTo(0, 0);
+  },
+  setFocus: b => { S.settings.focus = b.dataset.v === '1'; touchSettings(); save(); document.querySelectorAll('[data-a=setFocus]').forEach(x => x.classList.toggle('on', x === b)); },
+  focusOn: () => { act().view = 'focus'; fIdx = firstOpenEntry(); save(); render(); },
+  focusList: () => { act().view = 'list'; tab = 'log'; save(); render(); window.scrollTo(0, 0); },
+  fgo: b => goFocus(+b.dataset.i),
+  fstep: b => {
+    const ei = +b.dataset.e, si = +b.dataset.s, en = act().entries[ei], st = en.sets[si], x = ex(en.exId), d = +b.dataset.d;
+    const ls = lastSession(en.exId, act().editingId), last = ls ? ls.sets.filter(s => !s.warm) : [];
+    const wIdx = en.sets.slice(0, si).filter(s => !s.warm).length, p = last.length ? last[Math.min(wIdx, last.length - 1)] : null;
+    const sg = suggestion(en.exId, act().editingId, en.lo, en.hi);
+    if (b.dataset.x === 'w'){
+      const base = st.w != null ? toD(st.w) : p && p.w > 0 ? toD(p.w) : sg && sg.w > 0 ? toD(sg.w) : 0;
+      const v = Math.max(0, r1(base + d * incDisp(x)));
+      st.w = v > 0 ? fromD(v) : (x && x.type === 'reps' ? null : 0);
+    } else {
+      const base = st.r != null ? st.r : p ? p.r : sg ? sg.r : 0;
+      st.r = Math.max(0, base + d);
+    }
+    en.plan = 'custom'; save(); render();
+  },
+  fplan: b => {
+    const ei = +b.dataset.e, en = act().entries[ei], m = b.dataset.m, x = ex(en.exId);
+    en.plan = m;
+    const ls = lastSession(en.exId, act().editingId), last = ls ? ls.sets.filter(s => !s.warm) : [];
+    if (m !== 'custom' && last.length){
+      const repMode = x.type === 'reps' && !last.some(s => s.w > 0), dir = m === 'plus' ? 1 : m === 'minus' ? -1 : 0, inc = incOf(x);
+      let wi = 0;
+      en.sets.forEach(st => {
+        if (st.warm) return;
+        const p = last[Math.min(wi++, last.length - 1)];
+        if (st.done) return;
+        if (repMode){ st.w = null; st.r = Math.max(1, p.r + dir); }
+        else { const w = Math.max(0, Math.round(((p.w || 0) + dir * inc) * 100) / 100); st.w = w > 0 ? w : (x.type === 'reps' ? null : 0); st.r = p.r; }
+      });
+    }
+    save(); render();
+    if (m === 'custom'){ const inp = $(`#focus .fpage[data-i="${ei}"] .fset:not(.done) input[data-f=w]`); if (inp) inp.focus(); }
+    else if (!reduce.matches) document.querySelectorAll(`#focus .fpage[data-i="${ei}"] .fset:not(.done) .fstep input`).forEach((el, i) => el.animate([{color:'var(--acc)', transform:'scale(1.15)'}, {color:'var(--txt)', transform:'none'}], {duration:500, delay:i * 25, easing:EASE}));
+  },
+  fdone: b => {
+    const ei = +b.dataset.e, si = +b.dataset.s, en = act().entries[ei], st = en.sets[si], wasDone = st.done;
+    if (!st.done && !(st.r > 0) && !st.warm){
+      const ls = lastSession(en.exId, act().editingId), last = ls ? ls.sets.filter(s => !s.warm) : [];
+      const p = last.length ? last[Math.min(en.sets.slice(0, si).filter(s => !s.warm).length, last.length - 1)] : null;
+      if (p){ if (st.w == null) st.w = p.w > 0 ? p.w : null; st.r = p.r; }
+    }
+    A.done(b);
+    if (!focusOpen()) return;
+    const row = $(`#focus [data-k="f${st.id}"]`);
+    if (row && st.done && !reduce.matches){ pop(row.querySelector('.fchk')); const t = row.querySelector('.badge.gold'); if (t) pop(t, true); }
+    if (!wasDone && st.done && entryDone(en) && fIdx === ei) setTimeout(() => { if (focusOpen() && fIdx === ei) goFocus(ei + 1); }, 600);
   },
   fillsug: b => {
     const en = act().entries[+b.dataset.e], sg = suggestion(en.exId, act().editingId, en.lo, en.hi); if (!sg || sg.first) return;
@@ -1452,6 +1669,7 @@ document.addEventListener('change', e => {
   else if (f === 'import'){ importFile(t.files[0]); }
 });
 
+if (focusOpen()) fIdx = firstOpenEntry();
 render();
 if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register('./sw.js').catch(() => {});
 if (syncOn()) setTimeout(() => syncNow(false), 800);
