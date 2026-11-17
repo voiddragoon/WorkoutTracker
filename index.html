@@ -211,15 +211,22 @@ pre.sql{background:var(--card2);border-radius:10px;padding:12px;font-size:11px;o
 .fprog i{flex:1;height:4px;border-radius:2px;background:var(--line);transition:background-color .3s var(--ease),transform .3s var(--spring)}
 .fprog i.d{background:rgba(61,220,132,.7)}.fprog i.c{background:var(--acc);transform:scaleY(1.6)}
 .fcount{text-align:center;font-size:12px;color:var(--mut);font-weight:600;padding:6px 0 0}
-.fex{font-size:24px;font-weight:800;line-height:1.15;letter-spacing:-.3px}
-.fsetno{display:flex;align-items:center;gap:8px;margin-top:14px}.fsetno .fsn{font-size:34px;font-weight:800;letter-spacing:-.5px}
+.fsp .fin{height:100%;display:flex;flex-direction:column}
+.fex{font-size:clamp(19px,3.1vh,24px);font-weight:800;line-height:1.15;letter-spacing:-.3px}
+.fsetno{display:flex;align-items:center;gap:8px;margin-top:clamp(4px,1.4vh,14px)}.fsetno .fsn{font-size:clamp(26px,4.4vh,34px);font-weight:800;letter-spacing:-.5px}
 .fsetno .fsn span{color:var(--mut);font-weight:700;font-size:22px}
 .badge.okb{background:rgba(61,220,132,.16);color:var(--ok)}
-.fsp .flast .v{font-size:26px}
-.fbig{display:flex;flex-direction:column;gap:10px;margin:12px 0}
+.fsp .flast{margin:clamp(6px,1.4vh,14px) 0 clamp(6px,1.2vh,12px);padding:clamp(8px,1.3vh,12px) 14px}.fsp .flast .v{font-size:clamp(20px,3.3vh,26px);margin-top:2px}
+.fall{margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fsp .fopt{padding:clamp(7px,1.5vh,13px) 2px}
+.ffoot{display:flex;justify-content:space-between;align-items:center;margin-top:clamp(4px,1vh,8px);min-height:32px}
+.ffoot .fsug{padding:6px 0}
+.fadd{background:var(--card2);border:1px solid var(--line);border-radius:999px;padding:7px 14px;font-weight:700;font-size:13px;cursor:pointer}
+@media (max-height:720px){.fall{display:none}.fsp .fsub{display:none}}
+.fbig{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;gap:clamp(6px,1.2vh,10px);margin:clamp(6px,1.2vh,12px) 0}
 .fstep.big{grid-template-columns:64px 1fr 64px;padding:4px 4px 16px;border-radius:16px}
-.fstep.big button{height:66px;font-size:32px}.fstep.big input{font-size:44px}.fstep.big small{font-size:10px;bottom:6px}
-.flog{width:100%;height:64px;border:0;border-radius:16px;background:var(--acc);color:var(--on-acc);font-size:19px;font-weight:800;cursor:pointer;transition:transform .18s var(--ease),background-color .3s}
+.fstep.big button{height:clamp(46px,7.6vh,66px);font-size:32px}.fstep.big input{font-size:clamp(32px,5.4vh,44px)}.fstep.big small{font-size:10px;bottom:6px}
+.flog{width:100%;flex:none;height:clamp(50px,7.4vh,64px);border:0;border-radius:16px;background:var(--acc);color:var(--on-acc);font-size:19px;font-weight:800;cursor:pointer;transition:transform .18s var(--ease),background-color .3s}
 .flog:active{transform:scale(.97)}.flog.on{background:rgba(61,220,132,.18);color:var(--ok)}
 .fsp.done .fstep.big{background:rgba(61,220,132,.08)}
 .frest{position:absolute;inset:0;z-index:5;background:rgba(5,8,12,.94);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);display:flex;align-items:center;justify-content:center;touch-action:none;padding:20px}
@@ -239,7 +246,7 @@ pre.sql{background:var(--card2);border-radius:10px;padding:12px;font-size:11px;o
 body.resting #restbar{opacity:0!important;pointer-events:none!important}
 #focus{position:fixed;inset:0;z-index:15;background:var(--bg);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top)}
 #focus[hidden]{display:none}
-.fhead{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:8px 12px;border-bottom:1px solid var(--line)}
+.fhead{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:8px 12px;border-bottom:1px solid var(--line);position:relative;z-index:6;background:var(--bg)}
 .fhead .link:last-child{justify-self:end}
 .ftitle{text-align:center;display:flex;flex-direction:column;line-height:1.25}.ftitle b{font-size:15px}
 .ftitle span{font-size:12px;color:var(--acc);font-weight:700;font-variant-numeric:tabular-nums}
@@ -247,7 +254,9 @@ body.resting #restbar{opacity:0!important;pointer-events:none!important}
 .fdot{width:8px;height:8px;border-radius:4px;background:var(--line);border:0;padding:0;cursor:pointer;transition:width .35s var(--spring),background-color .3s var(--ease)}
 .fdot.done{background:rgba(61,220,132,.55)}.fdot.on{width:24px;background:var(--acc)}
 .ftrack{flex:1;min-height:0;display:flex;will-change:transform}
-.fpage{flex:none;width:100vw;height:100%;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;padding:6px 16px calc(120px + env(safe-area-inset-bottom))}
+.fpage{flex:none;width:100vw;height:100%;overflow:hidden;touch-action:none;padding:4px 16px calc(14px + env(safe-area-inset-bottom))}
+body.focusing{overflow:hidden;overscroll-behavior:none}
+body.focusing.rest-on:not(.resting) .fpage{padding-bottom:calc(84px + env(safe-area-inset-bottom))}
 .fin{max-width:560px;margin:0 auto}
 .ftop{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-top:8px}
 .fname{font-size:28px;font-weight:800;line-height:1.12;letter-spacing:-.4px;margin:0}
@@ -272,6 +281,8 @@ body.resting #restbar{opacity:0!important;pointer-events:none!important}
 .fchk{width:54px;height:56px;border-radius:12px;border:0;background:var(--card2);font-size:22px;font-weight:800;color:var(--mut);flex:none;cursor:pointer;transition:transform .18s var(--ease),background-color .25s}
 .fchk:active{transform:scale(.92)}.fset.done .fchk{background:var(--ok);color:#06210f}
 .fsum .li{border:1px solid var(--line);border-radius:12px;margin-bottom:6px;background:var(--card)}
+.fsum .li{padding:clamp(8px,1.4vh,12px) 14px}
+@media (max-height:720px){.fsum .fsub{display:none}.fsum .fname{font-size:24px}.fsum .stack{margin-top:8px}}
 @keyframes draw{to{stroke-dashoffset:0}}
 @keyframes fade{to{opacity:1}}
 @keyframes pop{from{transform:scale(0);opacity:0}70%{transform:scale(1.25);opacity:1}to{transform:scale(1);opacity:1}}
@@ -448,7 +459,7 @@ function lastSession(exId, excludeId){
   for (const w of S.workouts){
     if (w.id === excludeId || (best && w.start <= best.start)) continue;
     const en = w.entries.find(e => e.exId === exId);
-    if (en && en.sets.some(s => s.r > 0)) best = {start:w.start, sets:en.sets.filter(s => s.r > 0)};
+    if (en && en.sets.some(s => s.r > 0)) best = {start:w.start, name:w.name, sets:en.sets.filter(s => s.r > 0)};
   }
   return best;
 }
@@ -1139,8 +1150,8 @@ function showSummary(w){
 /* ============ rest timer ============ */
 let restEnd = 0, restTotal = 0, restDoneAt = 0, actx = null;
 function unlockAudio(){ try { if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === 'suspended') actx.resume(); } catch (e) {} }
-function startRest(sec){ restTotal = sec; restEnd = Date.now() + sec * 1000; restDoneAt = 0; const b = $('#restbar'); b.classList.remove('fin'); b.classList.add('show'); }
-function hideRest(){ restEnd = 0; restDoneAt = 0; $('#restbar').classList.remove('show'); }
+function startRest(sec){ restTotal = sec; restEnd = Date.now() + sec * 1000; restDoneAt = 0; const b = $('#restbar'); b.classList.remove('fin'); b.classList.add('show'); document.body.classList.add('rest-on'); }
+function hideRest(){ restEnd = 0; restDoneAt = 0; $('#restbar').classList.remove('show'); document.body.classList.remove('rest-on'); }
 function alertDone(){
   try { navigator.vibrate && navigator.vibrate([250, 120, 250]); } catch (e) {}
   if (!actx) return;
@@ -1342,10 +1353,20 @@ function firstOpenPage(){
   return i < 0 ? 0 : i;
 }
 function entryDone(en){ const w = en.sets.filter(st => !st.warm); return w.length > 0 && w.every(st => st.done); }
+/* "This set last time": the newest finished workout — whichever workout it was — in which this
+   exercise had a set with this number.  So set 3 of Lateral Raise in Pull A picks up set 3 from
+   Push A two days ago, even if a shorter session came in between. */
 function lastFor(en, si){
   const ls = lastSession(en.exId, S.active.editingId), last = ls ? ls.sets.filter(s => !s.warm) : [], st = en.sets[si];
-  if (!st || st.warm || !last.length) return {ls, last, p:null};
-  return {ls, last, p:last[Math.min(en.sets.slice(0, si).filter(s => !s.warm).length, last.length - 1)]};
+  if (!st || st.warm || !last.length) return {ls, last, p:null, src:null};
+  const wIdx = en.sets.slice(0, si).filter(s => !s.warm).length;
+  const ws = S.workouts.filter(w => w.id !== S.active.editingId).sort((a, b) => b.start - a.start);
+  for (const w of ws){
+    const e = w.entries.find(x => x.exId === en.exId); if (!e) continue;
+    const sets = e.sets.filter(s => !s.warm && s.r > 0);
+    if (sets.length > wIdx) return {ls, last, p:sets[wIdx], src:{start:w.start, name:w.name}};
+  }
+  return {ls, last, p:last[last.length - 1], src:{start:ls.start, name:ls.name}};
 }
 function setLabel(en, si){ const st = en.sets[si]; return st.warm ? 'Warm-up' : `Set ${en.sets.slice(0, si + 1).filter(s => !s.warm).length}`; }
 function positionTrack(animate){
@@ -1366,7 +1387,7 @@ function goFocus(i){
 }
 function setPage(en, ei, si, idx){
   const x = ex(en.exId) || {name:'(deleted exercise)', type:'weighted'}, isR = x.type === 'reps', st = en.sets[si];
-  const {ls, last, p} = lastFor(en, si), repMode = isR && !last.some(s => s.w > 0), inc = incDisp(x);
+  const {ls, last, p, src} = lastFor(en, si), repMode = isR && !last.some(s => s.w > 0), inc = incDisp(x);
   const sg = suggestion(en.exId, S.active.editingId, en.lo, en.hi), nW = en.sets.filter(s => !s.warm).length;
   const opts = p ? [['minus', repMode ? '−1<br>rep' : `−${inc}<br>${unit()}`], ['same', 'Same as<br>last'], ['plus', repMode ? '+1<br>rep' : `+${inc}<br>${unit()}`], ['custom', 'Custom']] : [['custom', 'Custom']];
   const wPh = p ? (p.w > 0 ? fmtW(p.w) : isR ? '+0' : '0') : sg && !sg.first && sg.w != null ? fmtW(sg.w) : isR ? '+0' : '0';
@@ -1376,15 +1397,14 @@ function setPage(en, ei, si, idx){
     <div class="ftop"><div><div class="fex">${esc(x.name)}</div>${en.note ? `<div class="enote">${esc(en.note)}</div>` : ''}</div><button class="icon" data-a="exmenu" data-e="${ei}" aria-label="Exercise options">⋯</button></div>
     <div class="fsetno"><button class="fsn" data-a="setmenu" data-e="${ei}" data-s="${si}">${setLabel(en, si)}${st.warm ? '' : `<span> of ${nW}</span>`}</button>${livePR(en, st) ? '<span class="badge gold">PR</span>' : ''}${st.done ? '<span class="badge okb">Logged</span>' : ''}</div>
     ${sg ? `<div class="fsub">Target ${sg.lo}–${sg.hi} reps</div>` : ''}
-    <div class="flast"><div class="k">This set last time${ls ? ` · ${fmtDate(ls.start)}` : ''}</div><div class="v">${p ? setTxt(p, isR) : st.warm ? 'Warm-up' : 'First time'}</div>${last.length > 1 ? `<div class="mut xs" style="margin-top:4px">All sets: ${last.map(s => setTxt(s, isR)).join(' · ')}</div>` : ''}</div>
+    <div class="flast"><div class="k">This set last time${src ? ` · ${esc(src.name)} · ${fmtDate(src.start)}` : ''}</div><div class="v">${p ? setTxt(p, isR) : st.warm ? 'Warm-up' : 'First time'}</div>${last.length > 1 ? `<div class="mut xs fall">Last session${ls && src && ls.start !== src.start ? ` (${esc(ls.name)}, ${fmtDate(ls.start)})` : ''}: ${last.map(s => setTxt(s, isR)).join(' · ')}</div>` : ''}</div>
     <div class="fopts" style="${p ? '' : 'grid-template-columns:1fr'}">${opts.map(([m, l]) => `<button class="fopt ${st.plan === m ? 'on' : ''}" data-a="fplan" data-e="${ei}" data-s="${si}" data-m="${m}">${l}</button>`).join('')}</div>
     <div class="fbig">
       <div class="fstep big"><button data-a="fstep" data-e="${ei}" data-s="${si}" data-x="w" data-d="-1" aria-label="Less weight">−</button><input type="number" inputmode="decimal" step="any" min="0" data-f="w" data-e="${ei}" data-s="${si}" value="${st.w != null ? fmtW(st.w) : ''}" placeholder="${wPh}"><button data-a="fstep" data-e="${ei}" data-s="${si}" data-x="w" data-d="1" aria-label="More weight">+</button><small>${isR ? 'added ' : ''}${unit()}</small></div>
       <div class="fstep big"><button data-a="fstep" data-e="${ei}" data-s="${si}" data-x="r" data-d="-1" aria-label="Fewer reps">−</button><input type="number" inputmode="numeric" step="1" min="0" data-f="r" data-e="${ei}" data-s="${si}" value="${st.r ?? ''}" placeholder="${rPh}"><button data-a="fstep" data-e="${ei}" data-s="${si}" data-x="r" data-d="1" aria-label="More reps">+</button><small>reps</small></div>
     </div>
     <button class="flog ${st.done ? 'on' : ''}" data-a="fdone" data-e="${ei}" data-s="${si}">${st.done ? '✓ Logged · tap to undo' : 'Log set'}</button>
-    ${sgTxt ? `<button class="fsug" data-a="fillsug" data-e="${ei}">Progression suggests <b>${sg.up ? '↑ ' : ''}${sgTxt}</b> · tap to fill</button>` : ''}
-    ${si === en.sets.length - 1 ? `<button class="btn ghost wide sm" style="margin-top:6px" data-a="addset" data-e="${ei}">+ Add another set</button>` : ''}
+    <div class="ffoot">${sgTxt ? `<button class="fsug" data-a="fillsug" data-e="${ei}">Suggests <b>${sg.up ? '↑ ' : ''}${sgTxt}</b></button>` : '<span></span>'}${si === en.sets.length - 1 ? `<button class="fadd" data-a="addset" data-e="${ei}">+ Set</button>` : ''}</div>
   </div></div>`;
 }
 function emptyPage(en, ei, idx){
