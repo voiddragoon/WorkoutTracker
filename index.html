@@ -206,7 +206,37 @@ nav#tabs svg{transition:transform .25s var(--spring)}
 .icon:disabled{opacity:.25}
 .fl .row{gap:8px;margin-top:6px}.fl .row input{flex:1;min-width:0;margin-top:0}.fl .row .mut{flex:none}
 pre.sql{background:var(--card2);border-radius:10px;padding:12px;font-size:11px;overflow:auto;white-space:pre;max-height:40vh}
-/* focus view: one exercise per full-screen page */
+/* focus view: one set per full-screen page */
+.fprog{display:flex;gap:4px;padding:10px 14px 0}.fseg{display:flex;gap:2px;min-width:0}
+.fprog i{flex:1;height:4px;border-radius:2px;background:var(--line);transition:background-color .3s var(--ease),transform .3s var(--spring)}
+.fprog i.d{background:rgba(61,220,132,.7)}.fprog i.c{background:var(--acc);transform:scaleY(1.6)}
+.fcount{text-align:center;font-size:12px;color:var(--mut);font-weight:600;padding:6px 0 0}
+.fex{font-size:24px;font-weight:800;line-height:1.15;letter-spacing:-.3px}
+.fsetno{display:flex;align-items:center;gap:8px;margin-top:14px}.fsetno .fsn{font-size:34px;font-weight:800;letter-spacing:-.5px}
+.fsetno .fsn span{color:var(--mut);font-weight:700;font-size:22px}
+.badge.okb{background:rgba(61,220,132,.16);color:var(--ok)}
+.fsp .flast .v{font-size:26px}
+.fbig{display:flex;flex-direction:column;gap:10px;margin:12px 0}
+.fstep.big{grid-template-columns:64px 1fr 64px;padding:4px 4px 16px;border-radius:16px}
+.fstep.big button{height:66px;font-size:32px}.fstep.big input{font-size:44px}.fstep.big small{font-size:10px;bottom:6px}
+.flog{width:100%;height:64px;border:0;border-radius:16px;background:var(--acc);color:var(--on-acc);font-size:19px;font-weight:800;cursor:pointer;transition:transform .18s var(--ease),background-color .3s}
+.flog:active{transform:scale(.97)}.flog.on{background:rgba(61,220,132,.18);color:var(--ok)}
+.fsp.done .fstep.big{background:rgba(61,220,132,.08)}
+.frest{position:absolute;inset:0;z-index:5;background:rgba(5,8,12,.94);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);display:flex;align-items:center;justify-content:center;touch-action:none;padding:20px}
+[data-theme=daylight] .frest{background:rgba(243,244,247,.96)}
+.fr-in{text-align:center;width:100%;max-width:420px}
+.frk{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--mut);font-weight:700}
+.frring{position:relative;width:240px;height:240px;margin:14px auto 18px}
+.frring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.frring circle{fill:none;stroke-width:12}.frring .trk{stroke:var(--line)}
+.frring .prg{stroke:var(--acc);stroke-linecap:round;stroke-dasharray:1;transition:stroke-dashoffset .25s linear}
+.frt{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:58px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-1px}
+.frnext{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:0 auto 16px;line-height:1.45}
+.frnext b{font-size:17px;display:block;margin-top:4px}
+.frbtns{display:flex;gap:8px;justify-content:center}
+.frbtns button{flex:1;height:52px;border-radius:14px;border:1px solid var(--line);background:var(--card2);font-weight:800;font-size:16px;cursor:pointer;transition:transform .18s var(--ease)}
+.frbtns button:active{transform:scale(.95)}.frbtns .primary{background:var(--acc);color:var(--on-acc);border-color:var(--acc)}
+body.resting #restbar{opacity:0!important;pointer-events:none!important}
 #focus{position:fixed;inset:0;z-index:15;background:var(--bg);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top)}
 #focus[hidden]{display:none}
 .fhead{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:8px 12px;border-bottom:1px solid var(--line)}
@@ -302,12 +332,13 @@ const r1 = x => Math.round(x * 10) / 10;
 
 /* ============ state ============ */
 function fresh(){
-  return { v:1, settings:{unit:'lb', formula:'epley', rest:120, theme:'glacier', repMin:8, repMax:12, inc:null, focus:true, seedPurged:true}, exercises: [], workouts: [], routines: [], deleted: {}, active: null };
+  return { v:1, settings:{unit:'lb', formula:'epley', rest:45, rest45:true, theme:'glacier', repMin:8, repMax:12, inc:null, focus:true, seedPurged:true}, exercises: [], workouts: [], routines: [], deleted: {}, active: null };
 }
 function normalize(d){
-  const f = fresh(), purged = !!(d.settings && d.settings.seedPurged);
+  const f = fresh(), purged = !!(d.settings && d.settings.seedPurged), had45 = !!(d.settings && d.settings.rest45);
   d.settings = Object.assign({}, f.settings, d.settings || {});
   if (!THEMES.some(t => t.id === d.settings.theme)) d.settings.theme = 'glacier';
+  if (!had45){ d.settings.rest = 45; d.settings.rest45 = true; }      // one-time switch to the 45-second rest default
   d.exercises = Array.isArray(d.exercises) ? d.exercises : [];
   d.exercises.forEach(x => { if (!GROUPS.includes(x.group)) x.group = 'Other'; if (x.type !== 'reps') x.type = 'weighted'; x.archived = !!x.archived; });
   d.workouts = Array.isArray(d.workouts) ? d.workouts.filter(w => w && Array.isArray(w.entries)) : [];
@@ -1127,6 +1158,12 @@ setInterval(() => {
       if (!reduce.matches) bar.animate([{transform:'scale(1)'},{transform:'scale(1.04)'},{transform:'scale(1)'}], {duration:500, easing:'cubic-bezier(.22,1,.36,1)'}); }
     else { $('#resttime').textContent = fmtClock(ms, true); $('#restfill').style.transform = `scaleX(${Math.min(1, 1 - ms / (restTotal * 1000)).toFixed(4)})`; }
   } else if (restDoneAt && Date.now() - restDoneAt > 5000){ hideRest(); }
+  if (fRest){
+    const t = $('#frtime'), ring = $('#frring'), ms = restEnd ? Math.max(0, restEnd - Date.now()) : 0;
+    if (t) t.textContent = fmtClock(ms, true);
+    if (ring) ring.style.strokeDashoffset = restEnd ? (1 - ms / (restTotal * 1000)).toFixed(4) : 1;
+    if (!restEnd && !fRest.ending){ fRest.ending = true; setTimeout(() => { if (fRest) skipRest(); }, 650); }
+  }
 }, 250);
 
 /* ============ import / export ============ */
@@ -1283,64 +1320,83 @@ function syncSection(){
 }
 
 /* ============ focus view ============
-   During a workout, each exercise gets its own full-screen page: what you did last time, quick
-   weight choices (−inc / same / +inc / custom), big steppers per set, and a check button.
-   Swipe sideways between exercises; finishing every set slides to the next one. */
-let fIdx = 0;
+   During a workout every set gets its own full-screen page, in one swipe line:
+   exercise 1 set 1, set 2 … then exercise 2, and so on, ending on a wrap-up page.
+   Each page compares with the same set last time and offers −inc / same / +inc / custom.
+   Logging a set opens a full-screen rest countdown; when it ends (or you swipe left) the
+   next set slides in.  Swipe right on the rest screen to go back to the set you just did. */
+let fIdx = 0, fKey = null, fRest = null;
 const focusOpen = () => !!(S.active && S.active.view === 'focus');
 const startView = () => S.settings.focus === false ? 'list' : 'focus';
-function firstOpenEntry(){ const i = S.active ? S.active.entries.findIndex(en => en.sets.some(st => !st.warm && !st.done)) : -1; return i < 0 ? 0 : i; }
+function fPages(){
+  const out = []; if (!S.active) return out;
+  S.active.entries.forEach((en, ei) => {
+    if (!en.sets.length) out.push({ei, si:-1, key:'e' + en.id});
+    en.sets.forEach((st, si) => out.push({ei, si, key:st.id}));
+  });
+  out.push({sum:true, key:'sum'});
+  return out;
+}
+function firstOpenPage(){
+  const P = fPages(), i = P.findIndex(pg => !pg.sum && pg.si >= 0 && (st => !st.done && !st.warm)(S.active.entries[pg.ei].sets[pg.si]));
+  return i < 0 ? 0 : i;
+}
 function entryDone(en){ const w = en.sets.filter(st => !st.warm); return w.length > 0 && w.every(st => st.done); }
+function lastFor(en, si){
+  const ls = lastSession(en.exId, S.active.editingId), last = ls ? ls.sets.filter(s => !s.warm) : [], st = en.sets[si];
+  if (!st || st.warm || !last.length) return {ls, last, p:null};
+  return {ls, last, p:last[Math.min(en.sets.slice(0, si).filter(s => !s.warm).length, last.length - 1)]};
+}
+function setLabel(en, si){ const st = en.sets[si]; return st.warm ? 'Warm-up' : `Set ${en.sets.slice(0, si + 1).filter(s => !s.warm).length}`; }
 function positionTrack(animate){
   const tr = $('#focus .ftrack'); if (!tr) return;
   tr.style.transition = animate && !reduce.matches ? `transform .42s ${SWIPE_EASE}` : 'none';
   tr.style.transform = `translateX(${-fIdx * innerWidth}px)`;
 }
 function updateFocusChrome(){
-  const n = S.active ? S.active.entries.length : 0;
-  document.querySelectorAll('#focus .fdot').forEach((d, i) => d.classList.toggle('on', i === fIdx));
-  const c = $('#fcount'); if (c) c.textContent = fIdx < n ? `${fIdx + 1} of ${n}` : 'Done';
+  const P = fPages(), pg = P[fIdx], c = $('#fcount'), n = S.active ? S.active.entries.length : 0;
+  if (c) c.textContent = !pg || pg.sum ? 'Wrap up' : pg.si < 0 ? `Exercise ${pg.ei + 1} of ${n}` :
+    `Exercise ${pg.ei + 1} of ${n} · ${setLabel(S.active.entries[pg.ei], pg.si)} of ${S.active.entries[pg.ei].sets.filter(s => !s.warm).length}`;
+  document.querySelectorAll('#focus .fprog i').forEach(t => t.classList.toggle('c', !!pg && t.dataset.k === pg.key));
 }
 function goFocus(i){
-  const n = S.active ? S.active.entries.length : 0;
-  fIdx = Math.max(0, Math.min(n, i)); positionTrack(true); updateFocusChrome();
+  const P = fPages();
+  fIdx = Math.max(0, Math.min(P.length - 1, i)); fKey = P[fIdx].key;
+  positionTrack(true); updateFocusChrome();
 }
-function focusPage(en, ei){
-  const x = ex(en.exId) || {name:'(deleted exercise)', type:'weighted'}, isR = x.type === 'reps';
-  const ls = lastSession(en.exId, S.active.editingId), last = ls ? ls.sets.filter(s => !s.warm) : [];
-  const repMode = isR && !last.some(s => s.w > 0), inc = incDisp(x);
-  const sg = suggestion(en.exId, S.active.editingId, en.lo, en.hi);
-  const opts = last.length ? [['minus', repMode ? '−1<br>rep' : `−${inc}<br>${unit()}`], ['same', 'Same as<br>last'], ['plus', repMode ? '+1<br>rep' : `+${inc}<br>${unit()}`], ['custom', 'Custom']] : [['custom', 'Custom']];
-  let wi = 0, n = 0;
-  const rows = en.sets.map((st, si) => {
-    const p = st.warm ? null : last.length ? last[Math.min(wi++, last.length - 1)] : null, lbl = st.warm ? 'Warm-up' : `Set ${++n}`;
-    const wPh = p ? (p.w > 0 ? fmtW(p.w) : isR ? '+0' : unit()) : sg && !sg.first && sg.w != null ? fmtW(sg.w) : isR ? '+0' : unit();
-    const rPh = p ? p.r : sg ? sg.r : '';
-    return `<div class="fset ${st.done ? 'done' : ''} ${st.warm ? 'warm' : ''}" data-k="f${st.id}">
-      <div class="fset-top"><button class="fsn" data-a="setmenu" data-e="${ei}" data-s="${si}">${lbl}</button><span class="mut xs">${p ? `Last ${setTxt(p, isR)}` : ''}</span>${livePR(en, st) ? '<span class="badge gold">PR</span>' : ''}</div>
-      <div class="fset-ctl">
-        <div class="fstep"><button data-a="fstep" data-e="${ei}" data-s="${si}" data-x="w" data-d="-1" aria-label="Less weight">−</button><input type="number" inputmode="decimal" step="any" min="0" data-f="w" data-e="${ei}" data-s="${si}" value="${st.w != null ? fmtW(st.w) : ''}" placeholder="${wPh}"><button data-a="fstep" data-e="${ei}" data-s="${si}" data-x="w" data-d="1" aria-label="More weight">+</button><small>${isR ? 'added ' : ''}${unit()}</small></div>
-        <div class="fstep"><button data-a="fstep" data-e="${ei}" data-s="${si}" data-x="r" data-d="-1" aria-label="Fewer reps">−</button><input type="number" inputmode="numeric" step="1" min="0" data-f="r" data-e="${ei}" data-s="${si}" value="${st.r ?? ''}" placeholder="${rPh}"><button data-a="fstep" data-e="${ei}" data-s="${si}" data-x="r" data-d="1" aria-label="More reps">+</button><small>reps</small></div>
-        <button class="fchk" data-a="fdone" data-e="${ei}" data-s="${si}" aria-label="Complete set">✓</button>
-      </div></div>`;
-  }).join('');
-  const sgTxt = sg && !sg.first ? (sg.w != null ? `${isR ? '+' : ''}${fmtW(sg.w)} × ${sg.r}` : `${sg.r} reps`) : '';
-  return `<div class="fpage" data-i="${ei}"><div class="fin">
-    <div class="ftop"><h1 class="fname">${esc(x.name)}</h1><button class="icon" data-a="exmenu" data-e="${ei}" aria-label="Exercise options">⋯</button></div>
-    ${en.note ? `<div class="enote">${esc(en.note)}</div>` : ''}
-    <div class="fsub">${sg ? `Target ${sg.lo}–${sg.hi} reps · ` : ''}${en.sets.filter(s => !s.warm).length} sets</div>
-    <div class="flast"><div class="k">Last time${ls ? ` · ${fmtDate(ls.start)}` : ''}</div><div class="v">${last.length ? last.map(s => setTxt(s, isR)).join(' · ') : 'First time. Pick a starting weight.'}</div></div>
-    <div class="fopts" style="${last.length ? '' : 'grid-template-columns:1fr'}">${opts.map(([m, l]) => `<button class="fopt ${en.plan === m ? 'on' : ''}" data-a="fplan" data-e="${ei}" data-m="${m}">${l}</button>`).join('')}</div>
-    ${sgTxt ? `<button class="fsug" data-a="fillsug" data-e="${ei}">Progression suggests <b>${sg.up ? '↑ ' : ''}${sgTxt}</b> · tap to use</button>` : ''}
-    ${rows}
-    <button class="btn ghost wide sm" style="margin-top:4px" data-a="addset" data-e="${ei}">+ Add set</button>
+function setPage(en, ei, si, idx){
+  const x = ex(en.exId) || {name:'(deleted exercise)', type:'weighted'}, isR = x.type === 'reps', st = en.sets[si];
+  const {ls, last, p} = lastFor(en, si), repMode = isR && !last.some(s => s.w > 0), inc = incDisp(x);
+  const sg = suggestion(en.exId, S.active.editingId, en.lo, en.hi), nW = en.sets.filter(s => !s.warm).length;
+  const opts = p ? [['minus', repMode ? '−1<br>rep' : `−${inc}<br>${unit()}`], ['same', 'Same as<br>last'], ['plus', repMode ? '+1<br>rep' : `+${inc}<br>${unit()}`], ['custom', 'Custom']] : [['custom', 'Custom']];
+  const wPh = p ? (p.w > 0 ? fmtW(p.w) : isR ? '+0' : '0') : sg && !sg.first && sg.w != null ? fmtW(sg.w) : isR ? '+0' : '0';
+  const rPh = p ? p.r : sg ? sg.r : '0';
+  const sgTxt = sg && !sg.first && !st.warm ? (sg.w != null ? `${isR ? '+' : ''}${fmtW(sg.w)} × ${sg.r}` : `${sg.r} reps`) : '';
+  return `<div class="fpage fsp ${st.done ? 'done' : ''} ${st.warm ? 'warm' : ''}" data-i="${idx}"><div class="fin">
+    <div class="ftop"><div><div class="fex">${esc(x.name)}</div>${en.note ? `<div class="enote">${esc(en.note)}</div>` : ''}</div><button class="icon" data-a="exmenu" data-e="${ei}" aria-label="Exercise options">⋯</button></div>
+    <div class="fsetno"><button class="fsn" data-a="setmenu" data-e="${ei}" data-s="${si}">${setLabel(en, si)}${st.warm ? '' : `<span> of ${nW}</span>`}</button>${livePR(en, st) ? '<span class="badge gold">PR</span>' : ''}${st.done ? '<span class="badge okb">Logged</span>' : ''}</div>
+    ${sg ? `<div class="fsub">Target ${sg.lo}–${sg.hi} reps</div>` : ''}
+    <div class="flast"><div class="k">This set last time${ls ? ` · ${fmtDate(ls.start)}` : ''}</div><div class="v">${p ? setTxt(p, isR) : st.warm ? 'Warm-up' : 'First time'}</div>${last.length > 1 ? `<div class="mut xs" style="margin-top:4px">All sets: ${last.map(s => setTxt(s, isR)).join(' · ')}</div>` : ''}</div>
+    <div class="fopts" style="${p ? '' : 'grid-template-columns:1fr'}">${opts.map(([m, l]) => `<button class="fopt ${st.plan === m ? 'on' : ''}" data-a="fplan" data-e="${ei}" data-s="${si}" data-m="${m}">${l}</button>`).join('')}</div>
+    <div class="fbig">
+      <div class="fstep big"><button data-a="fstep" data-e="${ei}" data-s="${si}" data-x="w" data-d="-1" aria-label="Less weight">−</button><input type="number" inputmode="decimal" step="any" min="0" data-f="w" data-e="${ei}" data-s="${si}" value="${st.w != null ? fmtW(st.w) : ''}" placeholder="${wPh}"><button data-a="fstep" data-e="${ei}" data-s="${si}" data-x="w" data-d="1" aria-label="More weight">+</button><small>${isR ? 'added ' : ''}${unit()}</small></div>
+      <div class="fstep big"><button data-a="fstep" data-e="${ei}" data-s="${si}" data-x="r" data-d="-1" aria-label="Fewer reps">−</button><input type="number" inputmode="numeric" step="1" min="0" data-f="r" data-e="${ei}" data-s="${si}" value="${st.r ?? ''}" placeholder="${rPh}"><button data-a="fstep" data-e="${ei}" data-s="${si}" data-x="r" data-d="1" aria-label="More reps">+</button><small>reps</small></div>
+    </div>
+    <button class="flog ${st.done ? 'on' : ''}" data-a="fdone" data-e="${ei}" data-s="${si}">${st.done ? '✓ Logged · tap to undo' : 'Log set'}</button>
+    ${sgTxt ? `<button class="fsug" data-a="fillsug" data-e="${ei}">Progression suggests <b>${sg.up ? '↑ ' : ''}${sgTxt}</b> · tap to fill</button>` : ''}
+    ${si === en.sets.length - 1 ? `<button class="btn ghost wide sm" style="margin-top:6px" data-a="addset" data-e="${ei}">+ Add another set</button>` : ''}
   </div></div>`;
 }
-function focusSummary(){
+function emptyPage(en, ei, idx){
+  const x = ex(en.exId);
+  return `<div class="fpage" data-i="${idx}"><div class="fin"><div class="ftop"><div class="fex">${esc(x ? x.name : '(deleted)')}</div><button class="icon" data-a="exmenu" data-e="${ei}">⋯</button></div>
+    <p class="mut">No sets yet.</p><button class="btn primary wide" data-a="addset" data-e="${ei}">+ Add a set</button></div></div>`;
+}
+function focusSummary(idx, P){
   const a = S.active, n = a.entries.length;
-  const items = a.entries.map((en, i) => { const x = ex(en.exId), w = en.sets.filter(s => !s.warm), d = w.filter(s => s.done).length;
-    return `<button class="li" data-a="fgo" data-i="${i}"><span>${esc(x ? x.name : '(deleted)')}</span><span class="${d === w.length && w.length ? 'up' : 'mut'} sm">${d}/${w.length} sets</span></button>`; }).join('');
-  return `<div class="fpage fsum" data-i="${n}"><div class="fin">
+  const items = a.entries.map((en, i) => { const x = ex(en.exId), w = en.sets.filter(s => !s.warm), d = w.filter(s => s.done).length, first = P.findIndex(pg => pg.ei === i);
+    return `<button class="li" data-a="fgo" data-i="${first}"><span>${esc(x ? x.name : '(deleted)')}</span><span class="${d === w.length && w.length ? 'up' : 'mut'} sm">${d}/${w.length} sets</span></button>`; }).join('');
+  return `<div class="fpage fsum" data-i="${idx}"><div class="fin">
     <h1 class="fname" style="margin-top:8px">${n ? 'Wrap up' : 'Add your first exercise'}</h1>
     <div class="fsub">${n ? 'Tap an exercise to jump back to it.' : 'Pick a move from the Tonal library to start.'}</div>
     <div style="margin:14px 0">${items}</div>
@@ -1348,17 +1404,51 @@ function focusSummary(){
     ${n ? '<div class="stack"><button class="btn primary" data-a="finish">Finish workout</button><button class="btn ghost danger" data-a="cancel">Discard workout</button></div>' : ''}
   </div></div>`;
 }
+function restHtml(){
+  const P = fPages(), pg = P[fRest.next]; let up = '';
+  if (pg && !pg.sum && pg.si >= 0){
+    const en = S.active.entries[pg.ei], x = ex(en.exId), {p} = lastFor(en, pg.si), isR = x && x.type === 'reps';
+    up = `<b>${esc(x ? x.name : '')}</b><div>${setLabel(en, pg.si)} of ${en.sets.filter(s => !s.warm).length}${p ? ` · last ${setTxt(p, isR)}` : ''}</div>`;
+  }
+  const ms = restEnd ? restEnd - Date.now() : 0;
+  return `<div class="frest"><div class="fr-in">
+    <div class="frk">Rest</div>
+    <div class="frring"><svg viewBox="0 0 220 220"><circle class="trk" cx="110" cy="110" r="96"/><circle class="prg" id="frring" cx="110" cy="110" r="96" pathLength="1" style="stroke-dashoffset:${restEnd ? (1 - ms / (restTotal * 1000)).toFixed(4) : 1}"/></svg><div class="frt" id="frtime">${fmtClock(Math.max(0, ms), true)}</div></div>
+    ${up ? `<div class="frnext"><div class="frk">Up next</div>${up}</div>` : ''}
+    <div class="frbtns"><button data-a="rest" data-d="-15">−15 s</button><button data-a="rest" data-d="15">+15 s</button><button class="primary" data-a="frskip">Skip</button></div>
+    <div class="mut xs" style="margin-top:14px">Swipe left to skip · swipe right to go back</div>
+  </div></div>`;
+}
+function openRest(next){
+  fRest = {next};
+  const box = $('#focus'); box.insertAdjacentHTML('beforeend', restHtml());
+  document.body.classList.add('resting');
+  const el = box.querySelector('.frest');
+  if (!reduce.matches){ el.animate([{opacity:0}, {opacity:1}], {duration:280, easing:'ease-out'}); el.firstElementChild.animate([{transform:'scale(.92) translateY(20px)', opacity:0}, {transform:'none', opacity:1}], {duration:480, easing:SPRING}); }
+}
+function closeRest(){
+  fRest = null; document.body.classList.remove('resting');
+  const el = $('#focus .frest'); if (!el) return;
+  if (reduce.matches){ el.remove(); return; }
+  el.style.pointerEvents = 'none';
+  el.animate([{opacity:1}, {opacity:0}], {duration:220, easing:'ease-in', fill:'forwards'}).onfinish = () => el.remove();
+}
+function skipRest(){ if (!fRest) return; const n = fRest.next; closeRest(); hideRest(); goFocus(n); }
 function renderFocus(){
   const box = $('#focus');
-  if (!focusOpen()){ if (!box.hidden){ box.hidden = true; box.innerHTML = ''; document.body.classList.remove('focusing'); } return; }
-  const a = S.active, n = a.entries.length;
-  fIdx = Math.max(0, Math.min(fIdx, n));
+  if (!focusOpen()){ if (!box.hidden){ box.hidden = true; box.innerHTML = ''; fRest = null; document.body.classList.remove('focusing', 'resting'); } return; }
+  const a = S.active, P = fPages();
+  if (fKey){ const k = P.findIndex(pg => pg.key === fKey); if (k >= 0) fIdx = k; }
+  fIdx = Math.max(0, Math.min(fIdx, P.length - 1)); fKey = P[fIdx].key;
   const cur = box.querySelector(`.fpage[data-i="${fIdx}"]`), top = cur ? cur.scrollTop : 0, opening = box.hidden;
+  if (fRest) fRest.next = Math.min(fRest.next, P.length - 1);
   box.innerHTML = `<div class="fhead"><button class="link" data-a="focusList">☰ List</button>
-      <div class="ftitle"><b>${esc(a.name)}</b><span><span id="felapsed">${a.manual ? 'Backdated' : fmtClock(Date.now() - a.start)}</span> · <span id="fcount"></span></span></div>
+      <div class="ftitle"><b>${esc(a.name)}</b><span><span id="felapsed">${a.manual ? 'Backdated' : fmtClock(Date.now() - a.start)}</span></span></div>
       <button class="link" data-a="finish">Finish</button></div>
-    <div class="fdots">${a.entries.map((en, i) => `<button class="fdot ${entryDone(en) ? 'done' : ''}" data-a="fgo" data-i="${i}" aria-label="Exercise ${i + 1}"></button>`).join('')}<button class="fdot" data-a="fgo" data-i="${n}" aria-label="Wrap up"></button></div>
-    <div class="ftrack">${a.entries.map(focusPage).join('')}${focusSummary()}</div>`;
+    <div class="fprog">${a.entries.map(en => `<div class="fseg" style="flex:${Math.max(1, en.sets.length)}">${en.sets.map(st => `<i class="${st.done ? 'd' : ''}" data-k="${st.id}"></i>`).join('') || '<i></i>'}</div>`).join('')}</div>
+    <div class="fcount" id="fcount"></div>
+    <div class="ftrack">${P.map((pg, i) => pg.sum ? focusSummary(i, P) : pg.si < 0 ? emptyPage(a.entries[pg.ei], pg.ei, i) : setPage(a.entries[pg.ei], pg.ei, pg.si, i)).join('')}</div>
+    ${fRest ? restHtml() : ''}`;
   box.hidden = false; document.body.classList.add('focusing');
   positionTrack(false); updateFocusChrome();
   const c2 = box.querySelector(`.fpage[data-i="${fIdx}"]`); if (c2) c2.scrollTop = top;
@@ -1367,8 +1457,10 @@ function renderFocus(){
 (() => {
   const box = $('#focus'); let d = null, justSwiped = 0;
   box.addEventListener('pointerdown', e => {
-    if (!e.target.closest('.ftrack') || e.target.closest('input') || e.pointerType === 'mouse') return;
-    d = {x0:e.clientX, y0:e.clientY, x:e.clientX, t:performance.now(), v:0, locked:false, id:e.pointerId};
+    if (e.pointerType === 'mouse' || e.target.closest('input')) return;
+    const onRest = !!e.target.closest('.frest');
+    if (!onRest && !e.target.closest('.ftrack')) return;
+    d = {x0:e.clientX, y0:e.clientY, x:e.clientX, t:performance.now(), v:0, locked:false, id:e.pointerId, rest:onRest};
   });
   box.addEventListener('pointermove', e => {
     if (!d || e.pointerId !== d.id) return;
@@ -1379,7 +1471,8 @@ function renderFocus(){
       if (Math.abs(dx) < 10 || Math.abs(dx) < Math.abs(dy) * 1.2) return;
       d.locked = true; try { box.setPointerCapture(e.pointerId); } catch (err) {}
     }
-    const n = S.active ? S.active.entries.length : 0, off = (fIdx === 0 && dx > 0) || (fIdx === n && dx < 0) ? dx * .25 : dx;
+    if (d.rest){ const r = box.querySelector('.frest .fr-in'); if (r) r.style.transform = `translateX(${dx * .6}px)`; e.preventDefault(); return; }
+    const last = fPages().length - 1, off = (fIdx === 0 && dx > 0) || (fIdx === last && dx < 0) ? dx * .25 : dx;
     const tr = box.querySelector('.ftrack'); tr.style.transition = 'none'; tr.style.transform = `translateX(${-fIdx * innerWidth + off}px)`;
     e.preventDefault();
   });
@@ -1387,8 +1480,15 @@ function renderFocus(){
     if (!d || (e && e.pointerId !== d.id)) return;
     const s0 = d; d = null; if (!s0.locked) return;
     justSwiped = performance.now();
-    const dx = s0.x - s0.x0, flick = Math.abs(s0.v) > .45 && Math.sign(s0.v) === Math.sign(dx);
-    goFocus(Math.abs(dx) > innerWidth * .22 || flick ? fIdx + (dx < 0 ? 1 : -1) : fIdx);
+    const dx = s0.x - s0.x0, flick = Math.abs(s0.v) > .45 && Math.sign(s0.v) === Math.sign(dx), far = Math.abs(dx) > innerWidth * .22 || flick;
+    if (s0.rest){
+      const r = box.querySelector('.frest .fr-in');
+      if (far && dx < 0) skipRest();
+      else if (far && dx > 0) closeRest();                               // back to the set you just logged; rest keeps running in the bar
+      else if (r && !reduce.matches){ r.animate([{transform:r.style.transform}, {transform:'none'}], {duration:320, easing:SPRING}); r.style.transform = ''; }
+      return;
+    }
+    goFocus(far ? fIdx + (dx < 0 ? 1 : -1) : fIdx);
   };
   box.addEventListener('pointerup', end); box.addEventListener('pointercancel', end);
   box.addEventListener('click', e => { if (performance.now() - justSwiped < 350){ e.stopPropagation(); e.preventDefault(); } }, true);
@@ -1402,11 +1502,11 @@ const A = {
   tab: b => { if (b.dataset.tab === tab){ window.scrollTo({top:0, behavior:'smooth'}); return; } slideToTab(b.dataset.tab); },
   settings: () => openSettings(),
   close: () => closeModal(),
-  start: () => { S.active = newWorkout(); S.active.view = startView(); fIdx = 0; save(); render(); },
+  start: () => { S.active = newWorkout(); S.active.view = startView(); fIdx = 0; fKey = null; save(); render(); },
   repeat: b => {
     const w = S.workouts.find(x => x.id === b.dataset.id); if (!w) return;
     if (S.active){ toast('Finish or discard the current workout first'); return; }
-    S.active = newWorkout(w.name); S.active.view = startView(); fIdx = 0;
+    S.active = newWorkout(w.name); S.active.view = startView(); fIdx = 0; fKey = null;
     S.active.entries = w.entries.map(en => ({id:uid(), exId:en.exId, sets:en.sets.map(s => newSet({w:s.w, r:s.r, warm:!!s.warm}))}));
     save(); tab = 'log'; render(); window.scrollTo(0, 0);
   },
@@ -1418,7 +1518,7 @@ const A = {
     const id = x.id, prev = lastSets(id, act().editingId);
     const sets = prev.length ? prev.slice(0, 10).map(p => newSet({warm:!!p.warm})) : [newSet()];
     const en = {id:uid(), exId:id, sets};
-    act().entries.push(en); if (focusOpen()) fIdx = act().entries.length - 1;
+    act().entries.push(en); if (focusOpen()) fKey = en.sets[0] ? en.sets[0].id : 'e' + en.id;
     save(); closeModal(); render(); if (!focusOpen()) revealEntry(en.id);
   },
   addset: b => { const en = act().entries[+b.dataset.e], l = en.sets[en.sets.length - 1];
@@ -1471,61 +1571,50 @@ const A = {
     const r = S.routines.find(x => x.id === b.dataset.id); if (!r) return;
     const items = r.items.filter(it => ex(it.exId));
     if (!items.length){ toast('This workout has no exercises left'); return; }
-    S.active = newWorkout(r.name); S.active.view = startView(); fIdx = 0;
+    S.active = newWorkout(r.name); S.active.view = startView(); fIdx = 0; fKey = null;
     S.active.entries = items.map(it => Object.assign({id:uid(), exId:it.exId, sets:Array.from({length:it.sets}, () => newSet())}, it.lo ? {lo:it.lo, hi:it.hi} : {}, it.note ? {note:it.note} : {}));
     save(); render(); window.scrollTo(0, 0);
   },
   setFocus: b => { S.settings.focus = b.dataset.v === '1'; touchSettings(); save(); document.querySelectorAll('[data-a=setFocus]').forEach(x => x.classList.toggle('on', x === b)); },
-  focusOn: () => { act().view = 'focus'; fIdx = firstOpenEntry(); save(); render(); },
+  focusOn: () => { act().view = 'focus'; fIdx = firstOpenPage(); fKey = null; save(); render(); },
   focusList: () => { act().view = 'list'; tab = 'log'; save(); render(); window.scrollTo(0, 0); },
   fgo: b => goFocus(+b.dataset.i),
   fstep: b => {
     const ei = +b.dataset.e, si = +b.dataset.s, en = act().entries[ei], st = en.sets[si], x = ex(en.exId), d = +b.dataset.d;
-    const ls = lastSession(en.exId, act().editingId), last = ls ? ls.sets.filter(s => !s.warm) : [];
-    const wIdx = en.sets.slice(0, si).filter(s => !s.warm).length, p = last.length ? last[Math.min(wIdx, last.length - 1)] : null;
-    const sg = suggestion(en.exId, act().editingId, en.lo, en.hi);
+    const {p} = lastFor(en, si), sg = suggestion(en.exId, act().editingId, en.lo, en.hi);
     if (b.dataset.x === 'w'){
       const base = st.w != null ? toD(st.w) : p && p.w > 0 ? toD(p.w) : sg && sg.w > 0 ? toD(sg.w) : 0;
       const v = Math.max(0, r1(base + d * incDisp(x)));
       st.w = v > 0 ? fromD(v) : (x && x.type === 'reps' ? null : 0);
-    } else {
-      const base = st.r != null ? st.r : p ? p.r : sg ? sg.r : 0;
-      st.r = Math.max(0, base + d);
-    }
-    en.plan = 'custom'; save(); render();
+    } else st.r = Math.max(0, (st.r != null ? st.r : p ? p.r : sg ? sg.r : 0) + d);
+    st.plan = 'custom'; save(); render();
   },
   fplan: b => {
-    const ei = +b.dataset.e, en = act().entries[ei], m = b.dataset.m, x = ex(en.exId);
-    en.plan = m;
-    const ls = lastSession(en.exId, act().editingId), last = ls ? ls.sets.filter(s => !s.warm) : [];
-    if (m !== 'custom' && last.length){
-      const repMode = x.type === 'reps' && !last.some(s => s.w > 0), dir = m === 'plus' ? 1 : m === 'minus' ? -1 : 0, inc = incOf(x);
-      let wi = 0;
-      en.sets.forEach(st => {
-        if (st.warm) return;
-        const p = last[Math.min(wi++, last.length - 1)];
-        if (st.done) return;
-        if (repMode){ st.w = null; st.r = Math.max(1, p.r + dir); }
-        else { const w = Math.max(0, Math.round(((p.w || 0) + dir * inc) * 100) / 100); st.w = w > 0 ? w : (x.type === 'reps' ? null : 0); st.r = p.r; }
-      });
+    const ei = +b.dataset.e, si = +b.dataset.s, en = act().entries[ei], st = en.sets[si], m = b.dataset.m, x = ex(en.exId);
+    st.plan = m;
+    const {last, p} = lastFor(en, si);
+    if (m !== 'custom' && p){
+      const dir = m === 'plus' ? 1 : m === 'minus' ? -1 : 0;
+      if (x.type === 'reps' && !last.some(s => s.w > 0)){ st.w = null; st.r = Math.max(1, p.r + dir); }
+      else { const w = Math.max(0, Math.round(((p.w || 0) + dir * incOf(x)) * 100) / 100); st.w = w > 0 ? w : (x.type === 'reps' ? null : 0); st.r = p.r; }
     }
     save(); render();
-    if (m === 'custom'){ const inp = $(`#focus .fpage[data-i="${ei}"] .fset:not(.done) input[data-f=w]`); if (inp) inp.focus(); }
-    else if (!reduce.matches) document.querySelectorAll(`#focus .fpage[data-i="${ei}"] .fset:not(.done) .fstep input`).forEach((el, i) => el.animate([{color:'var(--acc)', transform:'scale(1.15)'}, {color:'var(--txt)', transform:'none'}], {duration:500, delay:i * 25, easing:EASE}));
+    const page = $(`#focus .fpage[data-i="${fIdx}"]`);
+    if (m === 'custom'){ const inp = page && page.querySelector('input[data-f=w]'); if (inp) inp.focus(); }
+    else if (page && !reduce.matches) page.querySelectorAll('.fstep input').forEach((el, i) => el.animate([{color:'var(--acc)', transform:'scale(1.15)'}, {color:'var(--txt)', transform:'none'}], {duration:500, delay:i * 40, easing:EASE}));
   },
   fdone: b => {
     const ei = +b.dataset.e, si = +b.dataset.s, en = act().entries[ei], st = en.sets[si], wasDone = st.done;
-    if (!st.done && !(st.r > 0) && !st.warm){
-      const ls = lastSession(en.exId, act().editingId), last = ls ? ls.sets.filter(s => !s.warm) : [];
-      const p = last.length ? last[Math.min(en.sets.slice(0, si).filter(s => !s.warm).length, last.length - 1)] : null;
-      if (p){ if (st.w == null) st.w = p.w > 0 ? p.w : null; st.r = p.r; }
-    }
+    if (!st.done && !(st.r > 0) && !st.warm){ const {p} = lastFor(en, si); if (p){ if (st.w == null) st.w = p.w > 0 ? p.w : null; st.r = p.r; } }
     A.done(b);
-    if (!focusOpen()) return;
-    const row = $(`#focus [data-k="f${st.id}"]`);
-    if (row && st.done && !reduce.matches){ pop(row.querySelector('.fchk')); const t = row.querySelector('.badge.gold'); if (t) pop(t, true); }
-    if (!wasDone && st.done && entryDone(en) && fIdx === ei) setTimeout(() => { if (focusOpen() && fIdx === ei) goFocus(ei + 1); }, 600);
+    if (!focusOpen() || wasDone || !st.done) return;
+    const page = $(`#focus .fpage[data-i="${fIdx}"]`);
+    if (page && !reduce.matches){ pop(page.querySelector('.flog')); const t = page.querySelector('.badge.gold'); if (t) pop(t, true); }
+    const P = fPages(), cur = P.findIndex(pg => pg.key === st.id), next = cur + 1;
+    if (P[next] && !P[next].sum) openRest(next);
+    else { hideRest(); setTimeout(() => goFocus(next), 450); }
   },
+  frskip: () => skipRest(),
   fillsug: b => {
     const en = act().entries[+b.dataset.e], sg = suggestion(en.exId, act().editingId, en.lo, en.hi); if (!sg || sg.first) return;
     let n = 0;
@@ -1669,7 +1758,7 @@ document.addEventListener('change', e => {
   else if (f === 'import'){ importFile(t.files[0]); }
 });
 
-if (focusOpen()) fIdx = firstOpenEntry();
+if (focusOpen()){ fIdx = firstOpenPage(); fKey = null; }
 render();
 if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register('./sw.js').catch(() => {});
 if (syncOn()) setTimeout(() => syncNow(false), 800);
