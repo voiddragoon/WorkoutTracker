@@ -147,6 +147,12 @@ select{background:var(--card2);border:1px solid var(--line);border-radius:10px;p
 .pday{display:grid;grid-template-columns:44px 1fr;align-items:center;gap:10px;padding:6px 12px}
 .pday select{width:100%}
 .streakline{margin:6px 0 0;font-weight:700}
+.badge.tn{background:rgba(var(--acc-rgb),.14);color:var(--acc);margin-left:6px;vertical-align:1px}
+.tnnote{display:flex;align-items:center;gap:10px;background:rgba(var(--acc-rgb),.08);border:1px solid rgba(var(--acc-rgb),.22);border-radius:12px;padding:10px 12px;margin:2px 0 10px;font-size:13px;line-height:1.35}
+.tnnote b{color:var(--txt)}.tnnote .link{margin-left:auto;white-space:nowrap;font-size:13px}
+.tnrow{display:grid;grid-template-columns:1fr;gap:6px;padding:10px 12px;border-bottom:1px solid var(--line)}.tnrow:last-child{border-bottom:0}
+.tnrow .row{gap:8px}.tnrow select{flex:1;min-width:0;font-size:15px;padding:8px 10px}
+.tnx{white-space:nowrap;font-size:13px;display:flex;align-items:center;gap:5px}
 .herofoot{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
 .pseg{margin:0 0 12px}
 .bwrow input{min-width:0;background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:11px 10px;font-size:16px;color:var(--txt);outline:none}
@@ -422,7 +428,7 @@ const r1 = x => Math.round(x * 10) / 10;
 
 /* ============ state ============ */
 function fresh(){
-  return { v:1, settings:{unit:'lb', formula:'epley', rest:45, rest45:true, theme:'glacier', repMin:8, repMax:12, inc:null, focus:true, seedPurged:true}, exercises: [], workouts: [], routines: [], bodyweight: [], deleted: {}, active: null };
+  return { v:1, settings:{unit:'lb', formula:'epley', rest:45, rest45:true, theme:'glacier', repMin:8, repMax:12, inc:null, focus:true, seedPurged:true}, exercises: [], workouts: [], routines: [], bodyweight: [], tonal: {}, deleted: {}, active: null };
 }
 function normalize(d){
   const f = fresh(), purged = !!(d.settings && d.settings.seedPurged), had45 = !!(d.settings && d.settings.rest45);
@@ -433,6 +439,11 @@ function normalize(d){
   d.exercises.forEach(x => { if (!GROUPS.includes(x.group)) x.group = 'Other'; if (x.type !== 'reps') x.type = 'weighted'; x.archived = !!x.archived; });
   d.workouts = Array.isArray(d.workouts) ? d.workouts.filter(w => w && Array.isArray(w.entries)) : [];
   d.routines = Array.isArray(d.routines) ? d.routines.filter(r => r && Array.isArray(r.items)) : [];
+  // My Workouts keep their own order (o); sync stores items sorted by id, which would otherwise reshuffle them.
+  const PLAN = ['plan_push-a', 'plan_pull-a', 'plan_legs-a', 'plan_push-b', 'plan_pull-b', 'plan_legs-b'];
+  d.routines.forEach((r, i) => { if (typeof r.o !== 'number') r.o = PLAN.includes(r.id) ? PLAN.indexOf(r.id) : 100 + i; });
+  d.routines.sort((a, b) => a.o - b.o || (a.id < b.id ? -1 : 1));
+  d.tonal = d.tonal && typeof d.tonal === 'object' && !Array.isArray(d.tonal) ? d.tonal : {};
   d.bodyweight = Array.isArray(d.bodyweight) ? d.bodyweight.filter(b => b && b.id && b.w > 0 && isFinite(b.t)) : [];
   if (d.settings.rotation != null && !Array.isArray(d.settings.rotation)) delete d.settings.rotation;
   if (d.settings.plans != null) d.settings.plans = Array.isArray(d.settings.plans) ? d.settings.plans.filter(v => v && isFinite(v.from) && (v.days === null || (Array.isArray(v.days) && v.days.length === 7))) : [];
@@ -945,7 +956,8 @@ function routineBody(id, primary){
   const r = S.routines.find(x => x.id === id), items = r.items.filter(it => ex(it.exId));
   const sets = items.reduce((n, it) => n + it.sets, 0);
   return `<h2>${esc(r.name)}</h2><div class="mut sm mlist">${items.length} moves · ${sets} sets<br>${items.map(it => esc(ex(it.exId).name)).join(' · ')}</div>
-    <button class="btn ${primary ? 'primary' : 'ghost'} wide" data-a="startR" data-id="${r.id}">Start ${esc(r.name)}</button>`;
+    ${tonalOn() ? (primary ? tnNote() : '') + `<button class="link" data-a="startR" data-id="${r.id}">Log ${esc(r.name)} by hand</button>`
+      : `<button class="btn ${primary ? 'primary' : 'ghost'} wide" data-a="startR" data-id="${r.id}">Start ${esc(r.name)}</button>`}`;
 }
 function planHero(){
   const now = Date.now(), today = dayStart(now), ti = dowOf(now), wk0 = addDays(today, -ti), m = byDay(), st = streak();
@@ -960,7 +972,7 @@ function planHero(){
     body = `<h2>Rest day</h2><p class="mut">Recovery is when the strength gets built, and a planned rest day counts toward your streak.</p>
       ${nx ? `<button class="btn ghost wide" data-a="startR" data-id="${nx}">Train anyway: ${esc(rotName(nx))}</button>` : ''}`;
   } else if (id === 'any'){
-    body = `<h2>Any workout</h2><p class="mut">Log any session ${t === today ? 'today' : 'that day'} and it counts toward your streak.</p><button class="btn ${fresh ? 'primary' : 'ghost'} wide" data-a="start">Start empty workout</button>`;
+    body = `<h2>Any workout</h2><p class="mut">Log any session ${t === today ? 'today' : 'that day'} and it counts toward your streak.</p>${tonalOn() ? (fresh ? tnNote() : '') : `<button class="btn ${fresh ? 'primary' : 'ghost'} wide" data-a="start">Start empty workout</button>`}`;
   } else body = routineBody(id, fresh);
   const sk = st.cur ? `<div class="streak"><span class="flame">🔥</span> <b>${st.cur}</b> day${st.cur === 1 ? '' : 's'}${st.best > st.cur ? ` <span class="mut">· best ${st.best}</span>` : ''}</div>`
     : `<div class="streak zero">${st.best ? `Best streak ${st.best} · ` : ''}finish today's plan to start a streak</div>`;
@@ -971,7 +983,7 @@ function planHero(){
   }).join('');
   return `<div class="card hero" data-k="hero"><div class="herotop"><div class="kick">${kick}</div>${sk}</div>${body}
     <div class="rot wk" role="group" aria-label="This week's plan">${strip}</div>
-    <div class="herofoot"><button class="link" data-a="start">Empty workout</button><button class="link" data-a="schedEdit">Edit plan</button></div></div>`;
+    <div class="herofoot"><button class="link" data-a="start">${tonalOn() ? 'Log by hand' : 'Empty workout'}</button><button class="link" data-a="schedEdit">Edit plan</button></div></div>`;
 }
 function openSched(){
   const d = sched, opts = sel => S.routines.map(r => `<option value="${r.id}" ${sel === r.id ? 'selected' : ''}>${esc(r.name)}</option>`).join('')
@@ -1042,7 +1054,8 @@ function heroCard(){
     const r = S.routines.find(x => x.id === id), items = r.items.filter(it => ex(it.exId));
     const sets = items.reduce((n, it) => n + it.sets, 0);
     body = `<h2>${esc(r.name)}</h2><div class="mut sm mlist">${items.length} moves · ${sets} sets<br>${items.map(it => esc(ex(it.exId).name)).join(' · ')}</div>
-      <button class="btn ${nu.state === 'done' && isNext ? 'ghost' : 'primary'} wide" data-a="startR" data-id="${r.id}">Start ${esc(r.name)}</button>`;
+      ${tonalOn() ? (isNext && nu.state !== 'done' ? tnNote() : '') + `<button class="link" data-a="startR" data-id="${r.id}">Log ${esc(r.name)} by hand</button>`
+        : `<button class="btn ${nu.state === 'done' && isNext ? 'ghost' : 'primary'} wide" data-a="startR" data-id="${r.id}">Start ${esc(r.name)}</button>`}`;
   }
   return `<div class="card hero" data-k="hero"><div class="kick">${kick}</div>${body}
     <div class="rot" role="group" aria-label="Schedule">${rot.map((x, k) => `<button class="${k === i ? 'on' : ''} ${k === nu.i ? 'nx' : ''}" data-a="rotPick" data-i="${k}">${esc(rotName(x))}</button>`).join('')}</div>
@@ -1056,7 +1069,7 @@ function renderStart(){
   if (!S.routines.length) h += `<div class="card mut sm" data-k="rtempty">Build a workout such as Push, Pull or Legs: pick moves from the Tonal library and set the sets and reps for each.  Tap <b>+ New workout</b>, or open a past session in History and tap <b>Save as workout</b>.</div>`;
   else h += S.routines.map(r => `<div class="card routine" data-k="rt${r.id}"><div class="ehead"><b>${esc(r.name)}</b><button class="icon" data-a="editR" data-id="${r.id}" aria-label="Edit workout">⋯</button></div>
       <div class="mut sm">${r.items.map(it => { const x = ex(it.exId), [a, z] = it.lo ? [it.lo, it.hi] : x ? repRange(x) : [8, 12]; return `${esc(x ? x.name : '(deleted)')} ${it.sets}×${a === z ? a : `${a}–${z}`}`; }).join(' · ')}</div>
-      <button class="btn primary wide sm" style="margin-top:10px" data-a="startR" data-id="${r.id}">Start</button></div>`).join('');
+      ${tonalOn() ? '' : `<button class="btn primary wide sm" style="margin-top:10px" data-a="startR" data-id="${r.id}">Start</button>`}</div>`).join('');
   if (recent.length){
     h += `<h3 class="sec" data-k="rhead">Repeat a recent workout</h3>` + recent.map(w => {
       const names = w.entries.map(en => esc(ex(en.exId)?.name || '?'));
@@ -1117,7 +1130,7 @@ function renderHistory(){
     if (m !== lastM){ h += `<h3 class="sec" data-k="m${m}">${m}</h3>`; lastM = m; }
     const prc = Object.keys(rec.tags).filter(k => k.startsWith(w.id + ':')).reduce((n, k) => n + rec.tags[k].length, 0);
     const open = openW.has(w.id);
-    h += `<div class="card" data-k="${w.id}"><button class="whead" data-a="toggleW" data-id="${w.id}"><div><b>${esc(w.name)}</b>
+    h += `<div class="card" data-k="${w.id}"><button class="whead" data-a="toggleW" data-id="${w.id}"><div><b>${esc(w.name)}</b>${w.src === 'tonal' ? '<span class="badge tn">Tonal</span>' : ''}
       <div class="mut sm">${fmtDate(w.start)} · ${fmtDur(w.end - w.start)} · ${fmtVol(workoutVol(w))}</div></div>
       ${prc ? `<span class="badge gold">🏆 ${prc}</span>` : ''}</button>`;
     if (open){
@@ -1475,6 +1488,12 @@ function exForm(x, isNew, ctx){
 
 function openSettings(){
   const s = S.settings;
+  if (syncOn() && !openSettings.busy && (!openSettings.at || Date.now() - openSettings.at > 60000)){
+    openSettings.at = Date.now(); openSettings.busy = true;
+    tnCall('status').then(j => { const was = tnState(); tnSave({connected:j.connected, err:j.lastError, n:j.imported, at:j.lastSync ? Date.parse(j.lastSync) : was.at});
+      if ($('#tnStat') || (j.connected !== !!was.connected && !$('#modal').hidden && $('#sheet h2') && $('#sheet h2').textContent === 'Settings')) openSettings(); })
+      .catch(() => {}).finally(() => { openSettings.busy = false; });
+  }
   modal(`<h2>Settings</h2>
     <div class="fl">Units<div class="seg"><button class="${s.unit === 'lb' ? 'on' : ''}" data-a="unit" data-u="lb">lb</button><button class="${s.unit === 'kg' ? 'on' : ''}" data-a="unit" data-u="kg">kg</button></div></div>
     <div class="fl">Workout view<div class="seg"><button class="${s.focus !== false ? 'on' : ''}" data-a="setFocus" data-v="1">Full-screen</button><button class="${s.focus === false ? 'on' : ''}" data-a="setFocus" data-v="0">List</button></div></div>
@@ -1485,6 +1504,7 @@ function openSettings(){
     <label class="fl">Default weight increment (${unit()})<input data-f="defInc" type="number" inputmode="numeric" pattern="[0-9]*" step="1" min="1" value="${incDisp(null)}"></label>
     <label class="fl">Default rest timer<select data-f="rest">${[30,45,60,90,120,150,180,240,300].map(v => `<option value="${v}" ${v === s.rest ? 'selected' : ''}>${fmtClock(v * 1000)}</option>`).join('')}</select></label>
     ${syncSection()}
+    ${tonalSection()}
     <h3 class="sec">Backup</h3>
     <p class="mut sm" style="margin:0">${syncOn() ? `Your ${S.workouts.length} workout${S.workouts.length === 1 ? ' is' : 's are'} synced to your Supabase project.  A file backup is still a good idea now and then.` : `Your data (${S.workouts.length} workout${S.workouts.length === 1 ? '' : 's'}) lives only in this browser on this device.  Export a backup regularly, or turn on cloud sync.`}</p>
     <div class="stack">
@@ -1512,12 +1532,13 @@ function finishFlow(){
 }
 function commitWorkout(mode){
   const a = S.active;
-  const entries = a.entries.map(en => ({exId:en.exId, sets:en.sets.filter(s => s.r > 0 && (s.done || mode === 'all'))
-    .map(s => ({w: s.w > 0 ? Math.round(s.w * 100) / 100 : null, r: Math.round(s.r), warm: !!s.warm}))})).filter(en => en.sets.length);
+  const entries = a.entries.map(en => Object.assign({exId:en.exId, sets:en.sets.filter(s => s.r > 0 && (s.done || mode === 'all'))
+    .map(s => Object.assign({w: s.w > 0 ? Math.round(s.w * 100) / 100 : null, r: Math.round(s.r), warm: !!s.warm}, s.tx ? {tx:s.tx} : {}))}, en.tm ? {tm:en.tm} : {})).filter(en => en.sets.length);
   const orig = a.editingId && S.workouts.find(w => w.id === a.editingId);
   const end = a.manual ? a.start + Math.max(1, +a.dur || 60) * 60000 : orig ? a.start + (orig.end - orig.start) : Date.now();
   const w = {id: a.editingId || a.id, start: a.start, end, name: (a.name || 'Workout').trim() || 'Workout', entries};
   const rid = a.routineId || (orig && orig.routineId); if (rid) w.routineId = rid;
+  if (orig && orig.src) w.src = orig.src;
   touch(w);
   if (orig) S.workouts[S.workouts.indexOf(orig)] = w; else S.workouts.push(w);
   S.active = null; hideRest();
@@ -1618,7 +1639,14 @@ grant select, insert, update, delete on public.overload_state to authenticated;
 drop policy if exists "Users manage their own log" on public.overload_state;
 create policy "Users manage their own log" on public.overload_state
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);`;
-function SC(){ try { return JSON.parse(localStorage.getItem(SYNC_KEY) || '{}'); } catch (e) { return {}; } }
+/* Jim's Supabase project is built in, so a new device only needs an account.  The publishable key is
+   meant to be public; row-level security keeps each account's log private to that account. */
+const DEFAULT_SB = {url:'https://suxakhmjkgrkdggkzeyv.supabase.co', key:'sb_publishable_5ng61ZD0VTA3h6Q6mSKPLw_BOeRYeho'};
+function SC(){
+  let c = {}; try { c = JSON.parse(localStorage.getItem(SYNC_KEY) || '{}'); } catch (e) {}
+  if (!c.url && !c.custom) c = Object.assign({}, c, DEFAULT_SB);
+  return c;
+}
 function saveSC(c){ try { localStorage.setItem(SYNC_KEY, JSON.stringify(c)); } catch (e) {} }
 const syncOn = () => { const c = SC(); return !!(c.url && c.key && c.refresh && c.userId); };
 let syncing = false, syncAgain = false, syncTimer = null, syncMsg = '';
@@ -1657,7 +1685,7 @@ async function sbRest(path, opts, retry){
 }
 function payload(st){
   const byId = (a, b) => a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
-  return {v:1, settings:st.settings, exercises:[...st.exercises].sort(byId), workouts:[...st.workouts].sort(byId), routines:[...st.routines].sort(byId), bodyweight:[...(st.bodyweight || [])].sort(byId), deleted:st.deleted};
+  return {v:1, settings:st.settings, exercises:[...st.exercises].sort(byId), workouts:[...st.workouts].sort(byId), routines:[...st.routines].sort(byId), bodyweight:[...(st.bodyweight || [])].sort(byId), tonal:st.tonal || {}, deleted:st.deleted};
 }
 const canon = d => payload(normalize(JSON.parse(JSON.stringify(Object.assign({}, d, {active:null})))));
 function mergeState(a, b){
@@ -1669,7 +1697,7 @@ function mergeState(a, b){
     return [...m.values()].filter(it => !(del[it.id] >= (it.u || 0)));
   };
   return {v:1, settings:((b.settings && b.settings.u) || 0) > ((a.settings && a.settings.u) || 0) ? b.settings : a.settings,
-    exercises:merge(a.exercises, b.exercises), workouts:merge(a.workouts, b.workouts), routines:merge(a.routines, b.routines), bodyweight:merge(a.bodyweight, b.bodyweight), deleted:del};
+    exercises:merge(a.exercises, b.exercises), workouts:merge(a.workouts, b.workouts), routines:merge(a.routines, b.routines), bodyweight:merge(a.bodyweight, b.bodyweight), tonal:(((b.tonal && b.tonal.u) || 0) > ((a.tonal && a.tonal.u) || 0) ? b.tonal : a.tonal) || {}, deleted:del};
 }
 async function syncNow(manual){
   if (!syncOn()) return;
@@ -1705,7 +1733,86 @@ async function syncNow(manual){
   }
 }
 window.addEventListener('online', () => scheduleSync(500));
-document.addEventListener('visibilitychange', () => { if (!document.hidden && syncOn() && Date.now() - (SC().last || 0) > 30000) syncNow(false); });
+document.addEventListener('visibilitychange', () => { if (!document.hidden && syncOn() && Date.now() - (SC().last || 0) > 30000) syncNow(false);
+  if (!document.hidden && tonalOn() && Date.now() - (tnState().at || 0) > 10 * 60000) setTimeout(() => tnImport(false), 1500); });
+
+/* ============ Tonal import ============
+   Workouts come from Tonal through the "tonal" Supabase function, which runs hourly and whenever the app asks.
+   The app only stores a status summary; the Tonal login token lives in the database, out of the app's reach. */
+const tnState = () => SC().tonal || {};
+const tonalOn = () => syncOn() && !!tnState().connected;
+let tnBusy = false;
+async function tnCall(action, extra){
+  await ensureToken(false);
+  const c = SC();
+  const go = () => fetch(`${sbBase(c)}/functions/v1/tonal`, {method:'POST', headers:{apikey:c.key, Authorization:`Bearer ${SC().access}`, 'Content-Type':'application/json'},
+    body:JSON.stringify(Object.assign({action}, extra || {}))});
+  let r = await go();
+  if (r.status === 401 && action !== 'connect'){ await ensureToken(true); r = await go(); }
+  const j = await r.json().catch(() => ({}));
+  if (r.status === 404 && !j.error) throw new Error('The tonal importer isn\'t deployed in Supabase yet');
+  if (!r.ok || j.ok === false) throw new Error(j.error || `Importer error ${r.status}`);
+  return j;
+}
+function tnSave(patch){ const c = SC(); c.tonal = Object.assign({}, c.tonal || {}, patch); saveSC(c); }
+async function tnImport(manual){
+  if (!tonalOn() || tnBusy) return;
+  tnBusy = true;
+  try {
+    const j = await tnCall('sync');
+    tnSave({at:Date.now(), err:null});
+    if (j.imported || j.replaced) await syncNow(false);
+    if (manual || j.imported) toast(j.imported ? `Imported ${j.imported} workout${j.imported > 1 ? 's' : ''} from Tonal` : 'Up to date with Tonal');
+  } catch (e) {
+    tnSave({err:e.message});
+    if (manual) toast(e.message);
+  } finally { tnBusy = false; if ($('#tnStat')) openSettings(); else if (tab === 'log' && !S.active) render(); }
+}
+function tnLabel(){
+  const t = tnState();
+  return t.err ? `Last import failed: ${t.err}` : t.at ? `Last import ${ago(t.at)}.` : 'Not imported yet.';
+}
+function tnNote(){
+  return `<div class="tnnote"><span><b>Do it on Tonal.</b>  It appears here after you finish.  <span class="mut">${esc(tnLabel())}</span></span><button class="link" data-a="tnSync">Import now</button></div>`;
+}
+function tonalSection(){
+  const t = tnState();
+  if (!syncOn()) return `<h3 class="sec">Tonal</h3><p class="mut sm" style="margin:0">Sign in to cloud sync above first, then connect Tonal to import your workouts automatically.</p>`;
+  if (!t.connected) return `<h3 class="sec">Tonal</h3>
+    <p class="mut sm" style="margin:0">Import every Tonal workout automatically, hourly and whenever you open the app.  Your password goes to your own importer once and is never stored.  Days you logged by hand are replaced with Tonal's version.</p>
+    <label class="fl">Tonal email<input id="tnEmail" type="email" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+    <label class="fl">Tonal password<input id="tnPass" type="password" autocomplete="off"></label>
+    <div class="stack"><button class="btn primary" data-a="tnConnect">Connect Tonal</button></div>`;
+  return `<h3 class="sec">Tonal</h3>
+    <p class="mut sm" style="margin:0">Connected.  <span id="tnStat">${esc(tnLabel())}</span>${t.n ? `  ${t.n} workouts imported in total.` : ''}</p>
+    <div class="stack"><button class="btn" data-a="tnSync">Import now</button><button class="btn" data-a="tnMoves">Review Tonal moves</button><button class="btn ghost" data-a="tnOff">Disconnect Tonal</button></div>`;
+}
+function openTnMoves(){
+  const mv = Object.entries((S.tonal && S.tonal.moves) || {}).sort((a, b) => a[1].n.localeCompare(b[1].n));
+  const opts = sel => catalog().slice().sort((a, b) => a.name.localeCompare(b.name)).map(x => `<option value="${x.id}" ${x.id === sel ? 'selected' : ''}>${esc(x.name)}</option>`).join('');
+  modal(`<h2>Tonal moves</h2><p class="mut sm" style="margin-top:0">Each Tonal move and the Overload exercise its sets are logged under.  Change one if the match is wrong; every imported session moves with it.  Barbell moves are doubled because Tonal records weight per cable.</p>
+    <div class="card list">${mv.length ? mv.map(([id, m]) => `<div class="tnrow"><b>${esc(m.n)}</b><div class="row"><select data-f="tnmap" data-id="${esc(id)}">${opts(m.ex)}</select>
+      <label class="tnx"><input type="checkbox" data-f="tnx" data-id="${esc(id)}" ${m.x === 2 ? 'checked' : ''}>×2</label></div></div>`).join('') : '<div class="li mut">Nothing imported yet</div>'}</div>
+    <div class="stack"><button class="btn primary" data-a="close">Done</button></div>`);
+}
+function tnRemap(mid, ex2, x2){
+  const m = S.tonal.moves[mid]; if (!m) return;
+  if (ex2 && ex2 !== m.ex){ const x = ensureEx(ex2); if (!x) return; m.ex = x.id; }
+  if (x2 && x2 !== m.x) m.x = x2;
+  m.auto = false; S.tonal.u = Date.now();
+  let n = 0;
+  for (const w of S.workouts){
+    let hit = false;
+    for (const en of w.entries) if (en.tm === mid){
+      en.exId = m.ex;
+      for (const st of en.sets) if (st.w > 0 && (st.tx || 1) !== m.x){ st.w = Math.round(st.w / (st.tx || 1) * m.x * 100) / 100; if (m.x === 1) delete st.tx; else st.tx = m.x; }
+      hit = true;
+    }
+    if (hit){ touch(w); n++; }
+  }
+  recCache = null; save(); dirty = true;
+  toast(`Updated ${n} session${n === 1 ? '' : 's'}`);
+}
 
 function syncSection(){
   const c = SC();
@@ -1715,10 +1822,10 @@ function syncSection(){
     <label class="fl">Anon / publishable key<input id="sbKey" value="${esc(c.key || '')}" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
     <div class="stack"><button class="btn" data-a="sbSave">Connect project</button><button class="btn ghost" data-a="showSQL">Show setup SQL</button></div>`;
   if (!c.refresh || !c.userId) return `<h3 class="sec">Cloud sync</h3>
-    <p class="mut sm" style="margin:0">Project connected.  Sign in, or create an account the first time.</p>
+    <p class="mut sm" style="margin:0">Back up your log and use it on any device.  Create an account on your first device; sign in with the same email and password on the others.</p>
     <label class="fl">Email<input id="sbEmail" type="email" value="${esc(c.email || '')}" autocomplete="username" autocapitalize="off" spellcheck="false"></label>
     <label class="fl">Password<input id="sbPass" type="password" autocomplete="current-password"></label>
-    <div class="stack"><button class="btn primary" data-a="sbIn">Sign in</button><button class="btn" data-a="sbUp">Create account</button><button class="btn ghost" data-a="sbForget">Disconnect project</button></div>`;
+    <div class="stack"><button class="btn primary" data-a="sbIn">Sign in</button><button class="btn" data-a="sbUp">Create account</button><button class="btn ghost" data-a="sbForget">${c.url === DEFAULT_SB.url ? 'Use my own Supabase project' : 'Disconnect project'}</button></div>`;
   return `<h3 class="sec">Cloud sync</h3>
     <p class="mut sm" style="margin:0">On.  Signed in as <b>${esc(c.email || '')}</b>.  <span id="syncStat">${esc(syncLabel())}</span></p>
     <div class="stack"><button class="btn" data-a="sbSync">Sync now</button><button class="btn ghost" data-a="sbOut">Sign out</button></div>`;
@@ -1975,7 +2082,7 @@ const A = {
     const items = rDraft.items.map(({exId, sets, lo, hi, note}) => { const o = {exId, sets}; if (note) o.note = note; if (lo || hi){ const a = lo || hi, z = hi || lo; o.lo = Math.min(a, z); o.hi = Math.max(a, z); } return o; });
     const r = {id:rDraft.id || uid(), name, items}; touch(r);
     const i = S.routines.findIndex(x => x.id === r.id);
-    if (i >= 0) S.routines[i] = r; else S.routines.push(r);
+    if (i >= 0){ r.o = S.routines[i].o; S.routines[i] = r; } else { r.o = S.routines.reduce((m, x) => Math.max(m, x.o ?? 0), -1) + 1; S.routines.push(r); }
     rDraft = null; save(); closeModal(); tab = 'log'; render(); toast('Workout saved');
   },
   delR: () => { if (!confirm('Delete this workout? Sessions you already logged are kept.')) return;
@@ -2105,7 +2212,7 @@ const A = {
     if (S.active){ toast('Finish or discard the current workout first'); return; }
     const w = S.workouts.find(x => x.id === b.dataset.id); if (!w) return;
     S.active = {id:w.id, editingId:w.id, start:w.start, name:w.name, dur:Math.round((w.end - w.start) / 60000),
-      entries: w.entries.map(en => ({id:uid(), exId:en.exId, sets:en.sets.map(s => newSet({w:s.w, r:s.r, warm:!!s.warm, done:true}))}))};
+      entries: w.entries.map(en => Object.assign({id:uid(), exId:en.exId, sets:en.sets.map(s => newSet(Object.assign({w:s.w, r:s.r, warm:!!s.warm, done:true}, s.tx ? {tx:s.tx} : {})))}, en.tm ? {tm:en.tm} : {}))};
     save(); tab = 'log'; render(); window.scrollTo(0, 0);
   },
   metric: b => { prog.metric = b.dataset.m; render(); },
@@ -2165,7 +2272,27 @@ const A = {
   },
   sbSync: () => syncNow(true),
   sbOut: () => { const c = SC(); ['access', 'refresh', 'exp', 'userId', 'last'].forEach(k => delete c[k]); saveSC(c); syncMsg = ''; openSettings(); toast('Signed out. Your log stays on this device'); },
-  sbForget: () => { saveSC({}); openSettings(); },
+  tnConnect: async b => {
+    const email = $('#tnEmail').value.trim(), password = $('#tnPass').value;
+    if (!email || !password){ toast('Enter your Tonal email and password'); return; }
+    b.disabled = true; b.textContent = 'Connecting and importing…';
+    try {
+      const j = await tnCall('connect', {email, password});
+      tnSave({connected:true, at:Date.now(), err:null, n:j.imported});
+      await syncNow(true);
+      openSettings();
+      toast(`Imported ${j.imported} workout${j.imported === 1 ? '' : 's'} from Tonal${j.replaced ? ` · replaced ${j.replaced} logged by hand` : ''}`);
+      if (j.imported) setTimeout(() => { celebrate(); haptic('success'); }, 300);
+    } catch (e) { b.disabled = false; b.textContent = 'Connect Tonal'; toast(e.message); }
+  },
+  tnSync: () => tnImport(true),
+  tnMoves: () => openTnMoves(),
+  tnOff: async () => {
+    if (!confirm('Disconnect Tonal?  Workouts already imported stay in your log.')) return;
+    try { await tnCall('disconnect'); } catch (e) { /* forget locally either way */ }
+    tnSave({connected:false, at:0, err:null}); openSettings(); render();
+  },
+  sbForget: () => { saveSC(SC().url === DEFAULT_SB.url ? {custom:true} : {}); openSettings(); },
   exportJSON: () => download(`overload-backup-${ymd()}.json`, JSON.stringify(S), 'application/json'),
   exportCSV: () => exportCSV(),
   wipe: () => { if (!confirm('Erase all workouts, exercises and routines? If sync is on, this erases them on your other devices too.')) return;
@@ -2198,6 +2325,8 @@ document.addEventListener('change', e => {
   const t = e.target, f = t.dataset.f; if (!f) return;
   if (f === 'start'){ const v = new Date(t.value).getTime(); if (isFinite(v)){ const a = act(); a.start = v; a.manual = true; a.dur = a.dur || 60; save(); render(); } }
   else if (f === 'progEx'){ prog.exId = t.value; render(); }
+  else if (f === 'tnmap'){ tnRemap(t.dataset.id, t.value, null); }
+  else if (f === 'tnx'){ tnRemap(t.dataset.id, null, t.checked ? 2 : 1); }
   else if (f === 'pday' && sched){ sched.days[+t.dataset.i] = t.value; }
   else if (f === 'formula'){ S.settings.formula = t.value; touchSettings(); save(); }
   else if (f === 'rest'){ S.settings.rest = +t.value; touchSettings(); save(); }
@@ -2223,6 +2352,7 @@ if ((navigator.standalone || matchMedia('(display-mode: standalone)').matches) &
 render();
 if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register('./sw.js').catch(() => {});
 if (syncOn()) setTimeout(() => syncNow(false), 800);
+if (tonalOn() && Date.now() - (tnState().at || 0) > 10 * 60000) setTimeout(() => tnImport(false), 2500);
 </script>
 </body>
 </html>
