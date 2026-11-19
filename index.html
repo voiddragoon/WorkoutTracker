@@ -121,8 +121,6 @@ select{background:var(--card2);border:1px solid var(--line);border-radius:10px;p
 .tnx{flex:none;white-space:nowrap;font-size:13px;display:flex;align-items:center;gap:5px}
 .herofoot{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
 .pseg{margin:0 0 12px}
-.bwrow input{min-width:0;background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:11px 10px;font-size:16px;color:var(--txt);outline:none}
-.bwrow input[type=number]{flex:1}.bwrow input[type=date]{flex:1.25}
 .wknav{display:flex;align-items:center;justify-content:space-between;text-align:center;margin-bottom:10px}
 .wknav .icon:disabled{opacity:.25}
 .mrow{display:grid;grid-template-columns:88px 1fr 26px;align-items:center;gap:8px;margin:8px 0}
@@ -244,8 +242,13 @@ nav#tabs button.on{font-weight:700}
 @keyframes fade{to{opacity:1}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-delay:0s!important;transition-duration:.01ms!important}}
 .lrange{margin:0 0 4px}
-.lgh{display:flex;justify-content:space-between;align-items:baseline;margin:18px 4px 8px}
-.lgh h3{margin:0;font-size:15px;font-weight:800;letter-spacing:-.2px}
+.lgh{display:flex;align-items:center;gap:12px;width:100%;margin:10px 0 0;padding:14px 14px;border-radius:16px;background:var(--card);border:1px solid var(--line);color:var(--txt);font:inherit;text-align:left;cursor:pointer;transition:transform .5s var(--spring),border-color .25s var(--ease)}
+.lgh:active{transform:scale(.98);transition-duration:.09s}.lgh:disabled{opacity:.55;cursor:default}
+.lgh .chev{font-size:22px;line-height:1;color:var(--mut);transition:transform .35s var(--spring);width:12px;text-align:center}
+.lgh.open .chev{transform:rotate(90deg);color:var(--acc)}.lgh.open{border-color:rgba(var(--acc-rgb),.35)}
+.lgh .lgt{display:flex;flex-direction:column;gap:2px;min-width:0}.lgh .lgt b{font-size:16px;font-weight:800;letter-spacing:-.2px}
+.lgh.oth{margin-top:22px}
+.lgh + .lgrid{margin-top:10px}
 .lgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .lcard{background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,0) 90px),var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 12px 10px;
   text-align:left;color:var(--txt);display:flex;flex-direction:column;gap:1px;min-width:0;cursor:pointer;font:inherit;transition:transform .5s var(--spring),border-color .25s var(--ease)}
@@ -306,7 +309,6 @@ const PR_LABEL = {Weight:'Heaviest weight', '1RM':'Best est. 1RM', Reps:'Most re
 const LEGACY_SEED = ['Bench Press (Barbell)','Incline Bench Press (Barbell)','Bench Press (Dumbbell)','Incline Press (Dumbbell)','Chest Fly (Cable)','Dip','Push-Up','Deadlift (Barbell)','Bent-Over Row (Barbell)','Pull-Up','Chin-Up','Lat Pulldown (Cable)','Seated Row (Cable)','One-Arm Row (Dumbbell)','Back Squat (Barbell)','Front Squat (Barbell)','Romanian Deadlift (Barbell)','Leg Press','Bulgarian Split Squat (Dumbbell)','Leg Curl (Machine)','Leg Extension (Machine)','Hip Thrust (Barbell)','Calf Raise','Overhead Press (Barbell)','Shoulder Press (Dumbbell)','Lateral Raise (Dumbbell)','Face Pull (Cable)','Rear Delt Fly (Dumbbell)','Curl (Barbell)','Curl (Dumbbell)','Hammer Curl (Dumbbell)','Triceps Pushdown (Cable)','Skull Crusher (EZ Bar)','Overhead Triceps Extension (Cable)','Hanging Leg Raise','Cable Crunch','Ab Wheel Rollout'];
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 const pad = n => String(n).padStart(2, '0');
 const r1 = x => Math.round(x * 10) / 10;
 
@@ -378,7 +380,6 @@ try { navigator.storage && navigator.storage.persist && navigator.storage.persis
 /* ============ units & formatting ============ */
 const unit = () => S.settings.unit;
 const toD = lb => unit() === 'kg' ? lb / LB_PER_KG : lb;
-const fromD = v => unit() === 'kg' ? v * LB_PER_KG : v;
 const fmtW = lb => { const v = r1(toD(lb || 0)); return Number.isInteger(v) ? String(v) : v.toFixed(1); };
 const fmtNum = n => Math.round(n).toLocaleString();
 function e1rm(w, r){
@@ -402,7 +403,7 @@ function workoutVol(w){
 }
 const fmtVol = lb => `${fmtNum(toD(lb))} ${unit()}`;
 const setTxt = (s, isR) => isR ? (s.w > 0 ? `+${fmtW(s.w)} × ${s.r}` : `${s.r} reps`) : `${fmtW(s.w)} × ${s.r}`;
-function toast(msg){ const t = $('#toast'); t.textContent = msg; t.classList.toggle('plain', !/^(Logged|Workout saved|Backup restored|All data erased|SQL copied|Schedule reset|Synced|Signed out|Plan saved|Rotation saved|Account created)/.test(msg)); t.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 2400); }
+function toast(msg){ const t = $('#toast'); t.textContent = msg; t.classList.toggle('plain', !/^(Workout saved|Backup restored|All data erased|SQL copied|Synced|Signed out|Plan saved|Plan turned off|Account created|Imported|Up to date|Updated|Deleted)/.test(msg)); t.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 2400); }
 const empty = (t, s) => `<div class="card empty"><h2>${t}</h2><p class="mut">${s}</p></div>`;
 
 /* ============ data queries ============ */
@@ -473,7 +474,7 @@ function records(){
 /* ============ rendering ============ */
 let view = $('#view');                       // swapped briefly to render a neighbouring tab into the swipe preview
 let tab = 'log';
-const prog = {exId:null, metric:'e1', range:'6M'};
+const prog = {exId:null, metric:'e1', range:'6M', open:new Set()};
 const openW = new Set();
 let exQuery = '', chartState = null;
 
@@ -537,7 +538,7 @@ function haptic(kind){
   try { if (navigator.vibrate){ navigator.vibrate(kind === 'success' ? [14, 60, 14, 60, 24] : kind === 'medium' ? [18] : [8]); return; } } catch (e) {}
   for (let k = 0; k < n; k++) setTimeout(() => { try { hapSw.click(); } catch (e) {} }, k * 85);
 }
-const HAP_MED = new Set(['bwLog', 'schedSave', 'saveR', 'tnConnect', 'tnSync']);
+const HAP_MED = new Set(['schedSave', 'tnConnect', 'tnSync']);
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-a]'); if (!b || b.disabled) return;
   if (b.dataset.a === 'close' || b.dataset.a === 'import') return;
@@ -739,28 +740,37 @@ function planFor(t){
 const planActive = () => !!planFor(Date.now());
 /* Your Tonal workouts are the names Tonal gives your sessions ("Push B"), newest first, each with its latest session. */
 const sameName = (w, name) => (w.name || '').trim().toLowerCase() === String(name).trim().toLowerCase();
-function tonalWorkouts(){
+const isProg = id => typeof id === 'string' && id.startsWith('p:');
+const planLabel = id => id === 'any' ? 'Any' : id === 'rest' ? 'Rest' : isProg(id) ? id.slice(2) : id;
+const matches = (w, id) => isProg(id) ? (w.program || '').trim().toLowerCase() === id.slice(2).trim().toLowerCase() : sameName(w, id);
+function tonalWorkouts(){             // programs (one entry each) and individual custom workouts, newest first
   const m = new Map();
   for (const w of [...S.workouts].sort((a, b) => b.start - a.start)){
-    const n = (w.name || '').trim(); if (!n || /^tonal workout$/i.test(n)) continue;
-    const k = n.toLowerCase(), e = m.get(k);
-    if (e) e.count++; else m.set(k, {name:n, last:w, count:1});
+    const pr = (w.program || '').trim(), n = (w.name || '').trim();
+    if (!pr && (!n || /^tonal workout$/i.test(n))) continue;
+    const key = pr ? 'p:' + pr : n, k = key.toLowerCase(), e = m.get(k);
+    if (e) e.count++; else m.set(k, {key, name:pr || n, program:!!pr, last:w, count:1});
   }
   return [...m.values()];
 }
-const latestNamed = name => S.workouts.filter(w => sameName(w, name)).sort((a, b) => b.start - a.start)[0] || null;
+const latestFor = id => S.workouts.filter(w => matches(w, id)).sort((a, b) => b.start - a.start)[0] || null;
+function movesFor(id){                  // a custom workout's moves from its latest session; every move done in a program
+  const ws = S.workouts.filter(w => matches(w, id)).sort((a, b) => b.start - a.start), out = [];
+  for (const w of isProg(id) ? ws : ws.slice(0, 1)) for (const en of w.entries) if (!out.includes(en.exId)) out.push(en.exId);
+  return out;
+}
 const workSets = en => en.sets.filter(st => !st.warm && st.r > 0).length;
 function planned(t){                     // 'rest' | 'any' | a Tonal workout name | null when no plan covered that day
   const p = planFor(t); if (!p) return null;
   return p.days[dowOf(t)] || 'any';
 }
-const planName = id => id === 'any' ? 'Any' : id === 'rest' ? 'Rest' : id;
+const planName = planLabel;
 function byDay(){ const m = new Map(); for (const w of S.workouts){ const k = dayStart(w.start); if (!m.has(k)) m.set(k, []); m.get(k).push(w); } return m; }
 function dayDone(t, m){
   const id = planned(t); if (id === null) return null;
   if (id === 'rest') return true;
   const ws = m.get(dayStart(t)) || [];
-  return id === 'any' ? ws.length > 0 : ws.some(w => sameName(w, id));
+  return id === 'any' ? ws.length > 0 : ws.some(w => matches(w, id));
 }
 function streak(){
   const m = byDay(), today = dayStart(Date.now()), t0 = !!dayDone(today, m);
@@ -774,15 +784,15 @@ function streak(){
   return {cur, best:Math.max(best, cur), todayDone:t0};
 }
 function defaultWeek(){                 // your old plan's order if there was one, otherwise your recent Tonal workouts
-  const old = S.routines.map(r => r.name), tw = tonalWorkouts().slice(0, 6).map(t => t.name).reverse();
+  const old = S.routines.map(r => r.name), tw = tonalWorkouts().slice(0, 6).map(t => t.key).reverse();
   const src = old.length ? old : tw;
   return DOW.map((_, k) => k === 6 ? 'rest' : src[k] || 'any');
 }
-function workoutBody(name, primary){
-  const w = latestNamed(name);
-  const info = w ? `<div class="mut sm mlist">Last done ${fmtDate(w.start)} · ${w.entries.length} moves · ${w.entries.reduce((n, en) => n + workSets(en), 0)} sets<br>${w.entries.map(en => esc((ex(en.exId) || {name:'?'}).name)).join(' · ')}</div>`
+function workoutBody(id, primary){
+  const w = latestFor(id), prog_ = isProg(id);
+  const info = w ? `<div class="mut sm mlist">${prog_ ? `Tonal program · last session ${esc(w.name)}, ${fmtDate(w.start)}` : `Last done ${fmtDate(w.start)}`} · ${w.entries.length} moves · ${w.entries.reduce((n, en) => n + workSets(en), 0)} sets<br>${w.entries.map(en => esc((ex(en.exId) || {name:'?'}).name)).join(' · ')}</div>`
     : `<p class="mut">Not done on Tonal yet.</p>`;
-  return `<h2>${esc(name)}</h2>${info}${primary ? tnNote() : ''}`;
+  return `<h2>${esc(planLabel(id))}</h2>${info}${primary ? tnNote() : ''}`;
 }
 function planHero(){
   const now = Date.now(), today = dayStart(now), ti = dowOf(now), wk0 = addDays(today, -ti), m = byDay(), st = streak();
@@ -809,35 +819,36 @@ function planHero(){
     <div class="herofoot"><span></span><button class="link" data-a="schedEdit">Edit plan</button></div></div>`;
 }
 function openSched(){
-  const names = tonalWorkouts().map(t => t.name);
+  const tw = tonalWorkouts(), progs = tw.filter(t => t.program), custom = tw.filter(t => !t.program);
   const opts = sel => {
-    const list = names.slice();
-    if (sel && sel !== 'rest' && sel !== 'any' && !list.some(n => n.toLowerCase() === sel.toLowerCase())) list.unshift(sel);
-    return list.map(n => `<option value="${esc(n)}" ${sel === n ? 'selected' : ''}>${esc(n)}</option>`).join('')
-      + `<option value="rest" ${sel === 'rest' ? 'selected' : ''}>Rest</option><option value="any" ${sel === 'any' ? 'selected' : ''}>Any workout</option>`;
+    const o = (key, label) => `<option value="${esc(key)}" ${sel === key ? 'selected' : ''}>${esc(label)}</option>`;
+    const known = tw.some(t => t.key.toLowerCase() === String(sel).toLowerCase());
+    return (sel && sel !== 'rest' && sel !== 'any' && !known ? o(sel, planLabel(sel)) : '')
+      + (progs.length ? `<optgroup label="Tonal programs">${progs.map(t => o(t.key, t.name)).join('')}</optgroup>` : '')
+      + (custom.length ? `<optgroup label="${progs.length ? 'Custom workouts' : 'Your Tonal workouts'}">${custom.map(t => o(t.key, t.name)).join('')}</optgroup>` : '')
+      + `<optgroup label="Other">${o('rest', 'Rest')}${o('any', 'Any workout')}</optgroup>`;
   };
-  modal(`<h2>Weekly plan</h2><p class="mut sm" style="margin-top:0">Pick the Tonal workout for each day.  A day counts toward your streak when a Tonal session with that name comes in; rest days count on their own, and Any workout counts any session.  Changes apply from today, so past days keep the plan they had.</p>
-    ${names.length ? '' : '<p class="mut sm">Your Tonal workout names appear here after your first import.</p>'}
+  modal(`<h2>Weekly plan</h2><p class="mut sm" style="margin-top:0">Pick a Tonal program or custom workout for each day.  A day counts toward your streak when a session from it comes in; rest days count on their own, and Any workout counts any session.  Changes apply from today, so past days keep the plan they had.</p>
+    ${tw.length ? '' : '<p class="mut sm">Your programs and workouts appear here after your first import.</p>'}
     <div class="card list">${DOW.map((n, k) => `<label class="pday"><b>${n}</b><select data-f="pday" data-i="${k}">${opts(sched.days[k])}</select></label>`).join('')}</div>
     <div class="stack"><button class="btn primary" data-a="schedSave">Save plan</button>${planActive() ? '<button class="btn ghost" data-a="planOff">Turn off plan</button>' : ''}</div>`);
 }
 const dayStart = t => { const d = new Date(t); d.setHours(0, 0, 0, 0); return d.getTime(); };
-const dayDiff = (a, b) => Math.round((dayStart(b) - dayStart(a)) / 86400000);
 /* Which plan day a logged session was: the day it was started from, else a workout of the same name,
    else the plan day sharing at least half its moves (so sessions logged before this feature still count). */
 function heroCard(){
   if (planActive()) return planHero();
   const tw = tonalWorkouts();
   return `<div class="card hero" data-k="hero"><div class="kick">${tw.length ? 'Last workout' : 'Welcome'}</div>
-    ${tw.length ? workoutBody(tw[0].name, false) : '<h2>Ready to lift?</h2><p class="mut">Your Tonal workouts show up here, with PRs and strength trends.</p>'}
+    ${tw.length ? workoutBody(tw[0].key, false) : '<h2>Ready to lift?</h2><p class="mut">Your Tonal workouts show up here, with PRs and strength trends.</p>'}
     ${tnNote()}${tw.length ? '<button class="btn primary wide" data-a="schedEdit">🔥 Plan your week to track a streak</button>' : ''}</div>`;
 }
 function renderStart(){
   let h = heroCard();
   const tw = tonalWorkouts();
-  if (tw.length) h += `<h3 class="sec" data-k="twh">Your Tonal workouts</h3>` + tw.map(t => `<div class="card routine" data-k="tw${slug(t.name)}">
-      <div class="ehead"><b>${esc(t.name)}</b><span class="mut sm">${t.count}× · last ${fmtDate(t.last.start)}</span></div>
-      <div class="mut sm">${t.last.entries.map(en => `${esc((ex(en.exId) || {name:'?'}).name)} ${workSets(en)}×`).join(' · ')}</div></div>`).join('');
+  if (tw.length) h += `<h3 class="sec" data-k="twh">Your Tonal programs and workouts</h3>` + tw.map(t => `<div class="card routine" data-k="tw${slug(t.name)}">
+      <div class="ehead"><b>${esc(t.name)}${t.program ? ' <span class="badge">Program</span>' : ''}</b><span class="mut sm">${t.count}× · last ${fmtDate(t.last.start)}</span></div>
+      <div class="mut sm">${t.program ? `Last session ${esc(t.last.name)} · ` : ''}${t.last.entries.map(en => `${esc((ex(en.exId) || {name:'?'}).name)} ${workSets(en)}×`).join(' · ')}</div></div>`).join('');
   view.innerHTML = h;
 }
 
@@ -873,29 +884,33 @@ function renderHistory(){
 }
 
 function renderProgress(){
+  if (prog.view === 'body') prog.view = 'lifts';
   const v = prog.view || 'lifts';
-  const seg = `<div class="seg pseg" data-k="pseg">${[['lifts','Lifts'], ['body','Bodyweight'], ['muscles','Sets / muscle']].map(([k, l]) => `<button class="${k === v ? 'on' : ''}" data-a="progView" data-v="${k}">${l}</button>`).join('')}</div>`;
-  if (v === 'body') return renderBody(seg);
+  const seg = `<div class="seg pseg" data-k="pseg">${[['lifts','Lifts'], ['muscles','Sets / muscle']].map(([k, l]) => `<button class="${k === v ? 'on' : ''}" data-a="progView" data-v="${k}">${l}</button>`).join('')}</div>`;
   if (v === 'muscles') return renderMuscles(seg);
   return prog.detail ? renderLifts(seg) : renderLiftGroups(seg);
 }
 /* Groups for the strength overview: the workouts in this week's plan, in plan order, each with the moves from its
    latest Tonal session.  A move shared by two workouts appears in both.  Lifts outside the plan go under Other. */
 function liftGroups(){
-  const rec = records(), p = planFor(Date.now()), names = [];
-  const add = n => { if (n && n !== 'rest' && n !== 'any' && !names.some(x => x.toLowerCase() === n.toLowerCase())) names.push(n); };
-  if (p) p.days.forEach(add); else tonalWorkouts().forEach(t => add(t.name));
+  const rec = records(), p = planFor(Date.now()), keys = [];
+  const add = k => { if (k && k !== 'rest' && k !== 'any' && !keys.some(x => x.toLowerCase() === k.toLowerCase())) keys.push(k); };
+  if (p) p.days.forEach(add); else tonalWorkouts().forEach(t => add(t.key));
   const seen = new Set(), groups = [];
-  for (const n of names){
-    const w = latestNamed(n), ids = [];
-    if (w) for (const en of w.entries) if (rec.byEx[en.exId] && ex(en.exId) && !ids.includes(en.exId)) ids.push(en.exId);
+  for (const k of keys){
+    const ids = movesFor(k).filter(i => rec.byEx[i] && ex(i));
     ids.forEach(i => seen.add(i));
-    groups.push({name:n, ids, last:w});
+    groups.push({key:k, name:planLabel(k), ids, last:latestFor(k), program:isProg(k)});
   }
   const lastT = i => rec.byEx[i].sessions[rec.byEx[i].sessions.length - 1].t;
   const other = Object.keys(rec.byEx).filter(i => !seen.has(i) && ex(i)).sort((a, b) => lastT(b) - lastT(a));
-  if (other.length) groups.push({name: groups.length ? 'Other' : 'All lifts', ids:other, other:true});
+  if (other.length) groups.push({key:'__other', name:groups.length ? 'Other movements' : 'All movements', ids:other, other:true});
   return groups;
+}
+function liftPR(id){                    // the latest session beat every one before it
+  const x = ex(id), R = records().byEx[id], all = R.sessions; if (all.length < 2) return false;
+  const v = s => x.type === 'reps' ? s.maxR : s.e1;
+  return v(all[all.length - 1]) > Math.max(...all.slice(0, -1).map(v)) + 1e-9;
 }
 function sparkSVG(pts){                 // pts: [{t, v}] oldest first
   if (!pts.length) return '';
@@ -908,7 +923,7 @@ function liftCard(id, key, cut){
   const x = ex(id), R = records().byEx[id], isR = x.type === 'reps';
   const v = s => isR ? s.maxR : toD(s.e1);
   const all = R.sessions, last = all[all.length - 1], inR = all.filter(s => s.t >= cut);
-  const lv = v(last), prevBest = all.length > 1 ? Math.max(...all.slice(0, -1).map(v)) : Infinity, pr = lv > prevBest + 1e-9;   // latest session beat everything before it
+  const lv = v(last), pr = liftPR(id);
   const chg = inR.length > 1 && v(inR[0]) > 0 ? (v(inR[inR.length - 1]) - v(inR[0])) / v(inR[0]) * 100 : null;
   return `<button class="lcard${pr ? ' pr' : ''}" data-a="liftOpen" data-id="${id}" data-k="${key}">
     <span class="ln">${esc(x.name)}</span>
@@ -922,10 +937,14 @@ function renderLiftGroups(seg){
   const days = RANGES.find(r => r[0] === prog.range)[1], cut = days ? Date.now() - days * 86400000 : 0;
   let h = seg + `<div class="chips range lrange" data-k="lrange">${RANGES.map(r => `<button class="chip ${r[0] === prog.range ? 'on' : ''}" data-a="range" data-r="${r[0]}">${r[0]}</button>`).join('')}</div>`;
   groups.forEach((g, gi) => {
-    h += `<div class="lgh" data-k="lgh${gi}"><h3>${esc(g.name)}</h3><span class="mut xs">${g.last ? `last ${fmtDate(g.last.start)}` : g.other ? '' : 'not done on Tonal yet'}</span></div>`;
-    if (g.ids.length) h += `<div class="lgrid" data-k="lgr${gi}">${g.ids.map(id => liftCard(id, `lc${gi}_${id}`, cut)).join('')}</div>`;
+    const open = prog.open.has(g.key), prs = g.ids.filter(liftPR).length;
+    const meta = [g.ids.length ? `${g.ids.length} move${g.ids.length === 1 ? '' : 's'}` : '', prs ? `${prs} 🏆` : '',
+      g.last ? `last ${fmtDate(g.last.start)}` : g.other ? '' : 'not done on Tonal yet'].filter(Boolean).join(' · ');
+    h += `<button class="lgh${open ? ' open' : ''}${g.other ? ' oth' : ''}" data-a="lgTog" data-g="${esc(g.key)}" data-k="lgh${gi}" aria-expanded="${open}" ${g.ids.length ? '' : 'disabled'}>
+      <span class="chev">›</span><span class="lgt"><b>${esc(g.name)}</b>${g.program ? ' <span class="badge">Program</span>' : ''}<span class="mut xs">${meta}</span></span></button>`;
+    if (open && g.ids.length) h += `<div class="lgrid" data-k="lgr${gi}">${g.ids.map(id => liftCard(id, `lc${gi}_${id}`, cut)).join('')}</div>`;
   });
-  h += `<p class="mut xs center" style="margin:14px 0 0">Estimated 1RM for each move, with the change over ${prog.range === 'All' ? 'all time' : `the last ${prog.range}`}.  🏆 marks a move whose latest session is its best ever.  Tap a chart for details.</p>`;
+  h += `<p class="mut xs center" style="margin:14px 0 0">Tap a workout to see its moves.  Each chart is estimated 1RM, with the change over ${prog.range === 'All' ? 'all time' : `the last ${prog.range}`}; 🏆 marks a new best.</p>`;
   view.innerHTML = h;
 }
 
@@ -935,13 +954,13 @@ function renderLifts(seg){
   if (!exs.length){ view.innerHTML = seg + empty('No progress yet', 'Finish a workout and your strength charts appear here.'); return; }
   if (!prog.exId || !rec.byEx[prog.exId]) prog.exId = exs[0].id;
   const x = ex(prog.exId), R = rec.byEx[x.id], isR = x.type === 'reps';
-  const M = isR ? [['maxR','Best set','r'], ['totR','Total reps','r']].concat(R.best.w > 0 ? [['maxW','Heaviest added','w']] : []) : [['e1','Est. 1RM','w'], ['maxW','Heaviest set','w'], ['vol','Volume','w']].concat(S.bodyweight.length ? [['rel','× Bodyweight','x']] : []);
+  const M = isR ? [['maxR','Best set','r'], ['totR','Total reps','r']].concat(R.best.w > 0 ? [['maxW','Heaviest added','w']] : []) : [['e1','Est. 1RM','w'], ['maxW','Heaviest set','w'], ['vol','Volume','w']];
   if (!M.some(m => m[0] === prog.metric)) prog.metric = M[0][0];
   const m = M.find(mm => mm[0] === prog.metric);
   const days = RANGES.find(r => r[0] === prog.range)[1];
   const cut = days ? Date.now() - days * 86400000 : 0;
-  const val = s => m[2] === 'x' ? s.e1 / bwAt(s.t) : m[2] === 'w' ? toD(s[m[0]]) : s[m[0]];
-  const fmtV = v => m[2] === 'x' ? `${v.toFixed(2)}× BW` : m[2] === 'w' ? `${prog.metric === 'vol' ? fmtNum(v) : r1(v)} ${unit()}` : `${Math.round(v)} reps`;
+  const val = s => m[2] === 'w' ? toD(s[m[0]]) : s[m[0]];
+  const fmtV = v => m[2] === 'w' ? `${prog.metric === 'vol' ? fmtNum(v) : r1(v)} ${unit()}` : `${Math.round(v)} reps`;
   const inRange = R.sessions.filter(s => s.t >= cut);
   const pts = inRange.map(s => ({x:s.t, y:val(s), s}));
   const prior = R.sessions.filter(s => s.t < cut).map(val);
@@ -962,7 +981,7 @@ function renderLifts(seg){
     </div>
     ${pts.length ? chartSVG(pts, priorMax, fmtV, !isR) : '<div class="empty-sm mut">No sessions in this range.</div>'}
     <div class="chips range">${RANGES.map(r => `<button class="chip ${r[0] === prog.range ? 'on' : ''}" data-a="range" data-r="${r[0]}">${r[0]}</button>`).join('')}</div>
-    <p class="mut xs center" style="margin:10px 0 0">${m[2] === 'x' ? 'Estimated 1RM divided by your bodyweight logged nearest that day.  ' : ''}Gold dots mark a new all-time high. Tap or drag across the chart for details.</p>
+    <p class="mut xs center" style="margin:10px 0 0">Gold dots mark a new all-time high. Tap or drag across the chart for details.</p>
   </div>`;
 
   {
@@ -974,42 +993,6 @@ function renderLifts(seg){
   h += `<h3 class="sec" data-k="pc3h">PR history</h3><div class="card" data-k="pc3">${ev.length
     ? `<table><tbody>${ev.map(e => `<tr><td>${PR_LABEL[e.type]}</td><td class="num"><b>${e.w ? `${fmtW(e.val)} ${unit()}` : `${e.val} reps`}</b></td><td class="num mut">${shortDate(e.t)}</td></tr>`).join('')}</tbody></table>`
     : '<p class="mut sm" style="margin:0">No PRs yet. Your first session sets the baseline.</p>'}</div>`;
-  view.innerHTML = h;
-  bindChart();
-  if (view.id === 'view') countUp(view);
-}
-
-/* ============ bodyweight ============ */
-const bwSorted = () => [...S.bodyweight].sort((a, b) => a.t - b.t);
-function bwAt(t){ const a = bwSorted(); let v = a[0]; for (const b of a){ if (b.t <= t + 43200000) v = b; else break; } return v ? v.w : NaN; }
-function bwTrend(a){                     // least-squares slope over the last 28 days, in lb per week
-  if (a.length < 2) return null;
-  const end = a[a.length - 1].t, pts = a.filter(b => b.t >= end - 28 * 86400000);
-  if (pts.length < 2 || pts[pts.length - 1].t - pts[0].t < 5 * 86400000) return null;
-  const n = pts.length, mx = pts.reduce((s, b) => s + b.t, 0) / n, my = pts.reduce((s, b) => s + b.w, 0) / n;
-  let num = 0, den = 0; for (const b of pts){ num += (b.t - mx) * (b.w - my); den += (b.t - mx) ** 2; }
-  return den ? num / den * 7 * 86400000 : null;
-}
-function renderBody(seg){
-  const a = bwSorted(), last = a[a.length - 1], u = unit();
-  let h = seg + `<div class="card" data-k="bw1"><div class="row gap bwrow"><input id="bwIn" type="number" inputmode="decimal" step="any" min="0" placeholder="Weight (${u})" aria-label="Bodyweight">
-    <input id="bwDate" type="date" value="${ymd()}" max="${ymd()}" aria-label="Date"><button class="btn primary sm" data-a="bwLog">Log</button></div>
-    <p class="mut xs" style="margin:8px 0 0">One weigh-in per day; logging the same day again replaces it.  Weigh in at the same time of day for a cleaner trend.</p></div>`;
-  if (!a.length){ view.innerHTML = h + empty('No weigh-ins yet', 'Log your bodyweight once or twice a week to see your rate of gain and your strength relative to bodyweight.'); return; }
-  const wk = a.filter(b => b.t >= last.t - 6.5 * 86400000), avg = wk.reduce((s, b) => s + b.w, 0) / wk.length;
-  const tr = bwTrend(a), first = a[0], tot = last.w - first.w;
-  const sg = v => `<span class="${v >= 0 ? 'up' : 'down'}">${v >= 0 ? '+' : '−'}${fmtW(Math.abs(v))}</span>`;
-  const days = RANGES.find(r => r[0] === prog.range)[1], cut = days ? Date.now() - days * 86400000 : 0;
-  const pts = a.filter(b => b.t >= cut).map(b => ({x:b.t, y:toD(b.w), s:{}}));
-  h += `<div class="card" data-k="bw2"><div class="stats four">
-      <div class="stat"><div class="k">Current</div><div class="v">${fmtW(last.w)} ${u}</div></div>
-      <div class="stat"><div class="k">7-day avg</div><div class="v">${fmtW(avg)} ${u}</div></div>
-      <div class="stat"><div class="k">Trend / wk</div><div class="v">${tr === null ? '—' : sg(tr)}</div></div>
-      <div class="stat"><div class="k">Since ${new Date(first.t).toLocaleDateString(undefined, {month:'short', day:'numeric'})}</div><div class="v">${a.length > 1 ? sg(tot) : '—'}</div></div></div>
-    ${pts.length ? chartSVG(pts, Infinity, v => `${r1(v)} ${u}`, false) : '<div class="empty-sm mut">No weigh-ins in this range.</div>'}
-    <div class="chips range">${RANGES.map(r => `<button class="chip ${r[0] === prog.range ? 'on' : ''}" data-a="range" data-r="${r[0]}">${r[0]}</button>`).join('')}</div>
-    <p class="mut xs center" style="margin:10px 0 0">${tr === null ? 'The weekly trend appears once you have weigh-ins at least five days apart in the last four weeks.' : `Trend is the best-fit line through the last four weeks: ${tr >= 0 ? '+' : '−'}${(Math.abs(tr) / last.w * 100).toFixed(2)}% of bodyweight a week.`}</p></div>`;
-  h += `<h3 class="sec" data-k="bw3h">Weigh-ins</h3><div class="card list" data-k="bw3">${[...a].reverse().slice(0, 12).map(b => `<div class="li" style="cursor:default"><span>${shortDate(b.t)}</span><span class="row gap"><b>${fmtW(b.w)} ${u}</b><button class="icon" data-a="bwDel" data-id="${b.id}" aria-label="Delete weigh-in">✕</button></span></div>`).join('')}</div>`;
   view.innerHTML = h;
   bindChart();
   if (view.id === 'view') countUp(view);
@@ -1036,7 +1019,7 @@ function renderMuscles(seg){
   const add = (exId, n) => { if (!n) return; const m = muscleOf(ex(exId)); total += n; if (m) c[m] = (c[m] || 0) + n; else other += n; };
   for (const w of S.workouts) if (w.start >= t0 && w.start < t1) for (const en of w.entries) add(en.exId, en.sets.filter(st => !st.warm && st.r > 0).length);
   const plan = {}, wp = planFor(Date.now());
-  if (wp) for (const id of wp.days){ if (id === 'rest' || id === 'any') continue; const w = latestNamed(id);
+  if (wp) for (const id of wp.days){ if (id === 'rest' || id === 'any') continue; const w = latestFor(id);
     if (w) for (const en of w.entries){ const m = muscleOf(ex(en.exId)); if (m) plan[m] = (plan[m] || 0) + workSets(en); } }
   const hasPlan = Object.keys(plan).length > 0;
   const scale = Math.max(24, ...MUSCLES.map(m => Math.max(c[m] || 0, plan[m] || 0))) * 1.04;
@@ -1447,6 +1430,7 @@ function tnRemap(mid, ex2, x2){
   toast(`Updated ${n} session${n === 1 ? '' : 's'}`);
 }
 
+
 function syncSection(){
   const c = SC();
   if (!c.url || !c.key) return `<h3 class="sec">Cloud sync</h3>
@@ -1472,16 +1456,6 @@ const A = {
   setHap: b => { S.settings.haptics = b.dataset.v === '1'; touchSettings(); save(); document.querySelectorAll('[data-a=setHap]').forEach(x => x.classList.toggle('on', x === b)); haptic('medium'); },
   progView: b => { prog.view = b.dataset.v; render(); },
   wk: b => { prog.wk = Math.max(0, (prog.wk || 0) + +b.dataset.d); render(); },
-  bwLog: () => {
-    const v = Number($('#bwIn').value), dv = $('#bwDate').value;
-    if (!(v > 0)){ toast('Enter your bodyweight'); return; }
-    const [y, mo, d] = (dv || ymd()).split('-').map(Number), t = new Date(y, mo - 1, d, 12).getTime();
-    if (!isFinite(t) || t > Date.now() + 86400000){ toast('Pick a date up to today'); return; }
-    const lb = Math.round(fromD(v) * 100) / 100, same = S.bodyweight.find(b => dayDiff(b.t, t) === 0);
-    if (same){ same.w = lb; same.t = t; touch(same); } else { const b = {id:uid(), t, w:lb}; touch(b); S.bodyweight.push(b); }
-    save(); render(); toast(`Logged ${fmtW(lb)} ${unit()}`);
-  },
-  bwDel: b => { tomb(b.dataset.id); S.bodyweight = S.bodyweight.filter(x => x.id !== b.dataset.id); save(); render(); },
   dayPick: b => { const k = +b.dataset.i; heroDay = heroDay === k || (heroDay == null && k === dowOf(Date.now()) && !streak().todayDone) ? null : k; render(); },
   schedEdit: () => { const p = planFor(Date.now()); sched = {days: p ? p.days.slice() : defaultWeek()}; openSched(); },
   schedSave: () => {
@@ -1499,6 +1473,7 @@ const A = {
   goprog: b => { closeModal(); prog.exId = b.dataset.id; prog.view = 'lifts'; prog.detail = true; tab = 'progress'; render(); window.scrollTo(0, 0); },
   liftOpen: b => { prog.exId = b.dataset.id; prog.detail = true; render(); window.scrollTo(0, 0); },
   liftBack: () => { prog.detail = false; render(); },
+  lgTog: b => { const k = b.dataset.g; if (prog.open.has(k)) prog.open.delete(k); else prog.open.add(k); render(); },
   toggleW: b => { const id = b.dataset.id; openW.has(id) ? openW.delete(id) : openW.add(id); render(); },
   delW: async b => { if (!confirm('Delete this workout permanently?')) return; const id = b.dataset.id;
     await animateOut(view.querySelector(`[data-k="${id}"]`)); tomb(id); S.workouts = S.workouts.filter(w => w.id !== id); openW.delete(id); save(); render(); },
