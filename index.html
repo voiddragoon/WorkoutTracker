@@ -243,6 +243,23 @@ nav#tabs button.on{font-weight:700}
 @keyframes draw{to{stroke-dashoffset:0}}
 @keyframes fade{to{opacity:1}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-delay:0s!important;transition-duration:.01ms!important}}
+.lrange{margin:0 0 4px}
+.lgh{display:flex;justify-content:space-between;align-items:baseline;margin:18px 4px 8px}
+.lgh h3{margin:0;font-size:15px;font-weight:800;letter-spacing:-.2px}
+.lgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.lcard{background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,0) 90px),var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 12px 10px;
+  text-align:left;color:var(--txt);display:flex;flex-direction:column;gap:1px;min-width:0;cursor:pointer;font:inherit;transition:transform .5s var(--spring),border-color .25s var(--ease)}
+.lcard:active{transform:scale(.96);transition-duration:.09s}
+.lcard .ln{font-size:13px;font-weight:600;line-height:1.25;min-height:2.5em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.lcard .lv{font-size:22px;font-weight:800;letter-spacing:-.5px;font-variant-numeric:tabular-nums;margin-top:4px}
+.lcard .lv small{font-size:12px;font-weight:600;color:var(--mut);letter-spacing:0}
+.lcard .lsub{font-size:11.5px;color:var(--mut)}
+.lcard.pr{border-color:color-mix(in srgb,var(--gold) 45%,var(--line))}
+.spark{width:100%;height:36px;margin-top:8px;display:block;overflow:visible}
+.spark .sl{fill:none;stroke:var(--acc);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.spark .sa{fill:rgba(var(--acc-rgb),.13)}
+.lcard.pr .spark .sl{stroke:var(--gold)}
+.link.back{display:inline-block;margin:0 0 10px 2px;font-size:14px}
 @keyframes growx{from{transform:scaleX(0)}}
 @keyframes sheen{to{left:130%}}
 @keyframes pop{from{transform:scale(0);opacity:0}70%{transform:scale(1.25);opacity:1}to{transform:scale(1);opacity:1}}
@@ -860,8 +877,58 @@ function renderProgress(){
   const seg = `<div class="seg pseg" data-k="pseg">${[['lifts','Lifts'], ['body','Bodyweight'], ['muscles','Sets / muscle']].map(([k, l]) => `<button class="${k === v ? 'on' : ''}" data-a="progView" data-v="${k}">${l}</button>`).join('')}</div>`;
   if (v === 'body') return renderBody(seg);
   if (v === 'muscles') return renderMuscles(seg);
-  return renderLifts(seg);
+  return prog.detail ? renderLifts(seg) : renderLiftGroups(seg);
 }
+/* Groups for the strength overview: the workouts in this week's plan, in plan order, each with the moves from its
+   latest Tonal session.  A move shared by two workouts appears in both.  Lifts outside the plan go under Other. */
+function liftGroups(){
+  const rec = records(), p = planFor(Date.now()), names = [];
+  const add = n => { if (n && n !== 'rest' && n !== 'any' && !names.some(x => x.toLowerCase() === n.toLowerCase())) names.push(n); };
+  if (p) p.days.forEach(add); else tonalWorkouts().forEach(t => add(t.name));
+  const seen = new Set(), groups = [];
+  for (const n of names){
+    const w = latestNamed(n), ids = [];
+    if (w) for (const en of w.entries) if (rec.byEx[en.exId] && ex(en.exId) && !ids.includes(en.exId)) ids.push(en.exId);
+    ids.forEach(i => seen.add(i));
+    groups.push({name:n, ids, last:w});
+  }
+  const lastT = i => rec.byEx[i].sessions[rec.byEx[i].sessions.length - 1].t;
+  const other = Object.keys(rec.byEx).filter(i => !seen.has(i) && ex(i)).sort((a, b) => lastT(b) - lastT(a));
+  if (other.length) groups.push({name: groups.length ? 'Other' : 'All lifts', ids:other, other:true});
+  return groups;
+}
+function sparkSVG(pts){                 // pts: [{t, v}] oldest first
+  if (!pts.length) return '';
+  if (pts.length === 1) return `<svg class="spark" viewBox="0 0 100 36" preserveAspectRatio="none"><path class="sl" d="M0 18 L100 18" vector-effect="non-scaling-stroke" stroke-dasharray="3 4"/></svg>`;
+  const t0 = pts[0].t, t1 = pts[pts.length - 1].t || t0 + 1, lo = Math.min(...pts.map(p => p.v)), hi = Math.max(...pts.map(p => p.v)), sp = hi - lo || 1;
+  const d = pts.map((p, i) => `${i ? 'L' : 'M'}${((p.t - t0) / ((t1 - t0) || 1) * 100).toFixed(1)} ${(32 - (p.v - lo) / sp * 28).toFixed(1)}`).join(' ');
+  return `<svg class="spark" viewBox="0 0 100 36" preserveAspectRatio="none" aria-hidden="true"><path class="sa" d="${d} L100 36 L0 36 Z"/><path class="sl" d="${d}" vector-effect="non-scaling-stroke"/></svg>`;
+}
+function liftCard(id, key, cut){
+  const x = ex(id), R = records().byEx[id], isR = x.type === 'reps';
+  const v = s => isR ? s.maxR : toD(s.e1);
+  const all = R.sessions, last = all[all.length - 1], inR = all.filter(s => s.t >= cut);
+  const lv = v(last), prevBest = all.length > 1 ? Math.max(...all.slice(0, -1).map(v)) : Infinity, pr = lv > prevBest + 1e-9;   // latest session beat everything before it
+  const chg = inR.length > 1 && v(inR[0]) > 0 ? (v(inR[inR.length - 1]) - v(inR[0])) / v(inR[0]) * 100 : null;
+  return `<button class="lcard${pr ? ' pr' : ''}" data-a="liftOpen" data-id="${id}" data-k="${key}">
+    <span class="ln">${esc(x.name)}</span>
+    <span class="lv">${isR ? `${lv}<small> reps</small>` : `${r1(lv)}<small> ${unit()}</small>`}${pr ? ' <small>🏆</small>' : ''}</span>
+    <span class="lsub">${isR ? 'best set' : 'est. 1RM'} · ${chg === null ? `${all.length} session${all.length === 1 ? '' : 's'}` : `<span class="${chg >= 0 ? 'up' : 'down'}">${chg >= 0 ? '+' : ''}${chg.toFixed(0)}%</span> ${prog.range}`}</span>
+    ${sparkSVG((inR.length ? inR : [last]).map(s => ({t:s.t, v:v(s)})))}</button>`;
+}
+function renderLiftGroups(seg){
+  const groups = liftGroups();
+  if (!groups.some(g => g.ids.length)){ view.innerHTML = seg + empty('No progress yet', 'Your strength charts appear here once your Tonal workouts are imported.'); return; }
+  const days = RANGES.find(r => r[0] === prog.range)[1], cut = days ? Date.now() - days * 86400000 : 0;
+  let h = seg + `<div class="chips range lrange" data-k="lrange">${RANGES.map(r => `<button class="chip ${r[0] === prog.range ? 'on' : ''}" data-a="range" data-r="${r[0]}">${r[0]}</button>`).join('')}</div>`;
+  groups.forEach((g, gi) => {
+    h += `<div class="lgh" data-k="lgh${gi}"><h3>${esc(g.name)}</h3><span class="mut xs">${g.last ? `last ${fmtDate(g.last.start)}` : g.other ? '' : 'not done on Tonal yet'}</span></div>`;
+    if (g.ids.length) h += `<div class="lgrid" data-k="lgr${gi}">${g.ids.map(id => liftCard(id, `lc${gi}_${id}`, cut)).join('')}</div>`;
+  });
+  h += `<p class="mut xs center" style="margin:14px 0 0">Estimated 1RM for each move, with the change over ${prog.range === 'All' ? 'all time' : `the last ${prog.range}`}.  🏆 marks a move whose latest session is its best ever.  Tap a chart for details.</p>`;
+  view.innerHTML = h;
+}
+
 function renderLifts(seg){
   const rec = records(), lu = lastUsed();
   const exs = S.exercises.filter(x => rec.byEx[x.id]).sort((a, b) => (lu[b.id] || 0) - (lu[a.id] || 0));
@@ -884,7 +951,7 @@ function renderLifts(seg){
   const chg = pts.length > 1 && first.y > 0 ? (last.y - first.y) / first.y * 100 : null;
   const chgHtml = chg === null ? '—' : `<span class="${chg >= 0 ? 'up' : 'down'}">${chg >= 0 ? '+' : ''}${chg.toFixed(1)}%</span>`;
 
-  let h = seg + `<div class="card" data-k="pc1">
+  let h = seg + `<button class="link back" data-a="liftBack" data-k="lback">← All lifts</button><div class="card" data-k="pc1">
     <select class="exsel" data-f="progEx" aria-label="Exercise">${exs.map(e => `<option value="${e.id}" ${e.id === x.id ? 'selected' : ''}>${esc(e.name)}</option>`).join('')}</select>
     <div class="chips">${M.map(mm => `<button class="chip ${mm[0] === prog.metric ? 'on' : ''}" data-a="metric" data-m="${mm[0]}">${mm[1]}</button>`).join('')}</div>
     <div class="stats four">
@@ -1429,7 +1496,9 @@ const A = {
     touchSettings(); heroDay = null; save(); closeModal(); render(); toast('Plan turned off');
   },
 
-  goprog: b => { closeModal(); prog.exId = b.dataset.id; tab = 'progress'; render(); window.scrollTo(0, 0); },
+  goprog: b => { closeModal(); prog.exId = b.dataset.id; prog.view = 'lifts'; prog.detail = true; tab = 'progress'; render(); window.scrollTo(0, 0); },
+  liftOpen: b => { prog.exId = b.dataset.id; prog.detail = true; render(); window.scrollTo(0, 0); },
+  liftBack: () => { prog.detail = false; render(); },
   toggleW: b => { const id = b.dataset.id; openW.has(id) ? openW.delete(id) : openW.add(id); render(); },
   delW: async b => { if (!confirm('Delete this workout permanently?')) return; const id = b.dataset.id;
     await animateOut(view.querySelector(`[data-k="${id}"]`)); tomb(id); S.workouts = S.workouts.filter(w => w.id !== id); openW.delete(id); save(); render(); },
